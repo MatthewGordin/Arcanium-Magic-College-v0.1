@@ -1,0 +1,389 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class PrologueTown is Cinematic
+    
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+    Map tempMap
+    MapList maps
+    ForestClearing forestClearing
+
+    //Actors
+    Animation player
+    Animation goblin1
+    Animation goblin2
+    Animation goblin3
+    Animation goblin4
+    Animation goblin5
+    Animation goblin6
+    Animation man1
+    Animation man2
+    Animation woman1
+    Animation boy
+
+    text playerImgSheet = "Hero"
+    text goblinImgSheet = "Goblin"
+    text boyImgSheet = "Boy"
+    text man1ImgSheet = "Man1"
+    text man2ImgSheet = "Man2"
+    text woman1ImgSheet = "Woman1"
+
+    //Goblin 1
+    MoveNPCBehavior     move1Goblin1
+    MoveNPCBehavior     move2Goblin1
+
+    //Goblin 2
+    MoveNPCBehavior     move1Goblin2
+    MoveNPCBehavior     move2Goblin2
+
+    //Goblin 3
+    MoveNPCBehavior     move1Goblin3
+
+    //Goblin 4
+    MoveNPCBehavior     move1Goblin4
+
+    //Goblin 5
+    MoveNPCBehavior     move1Goblin5
+
+    //Goblin 6
+    MoveNPCBehavior     move1Goblin6
+
+    //Man1
+    MoveNPCBehavior     move1Man1
+
+    //Man2
+    MoveNPCBehavior     move1Man2
+
+    //Woman1
+    MoveNPCBehavior     move1Woman1
+    MoveNPCBehavior     move2Woman1
+
+    //Boy
+    MoveNPCBehavior     move1Boy
+    MoveNPCBehavior     move2Boy
+    MoveNPCBehavior     move3Boy
+    MoveNPCBehavior     move4Boy
+
+    MoveNPCBehavior     move1Player
+    MoveNPCBehavior     move2Player
+    MoveNPCBehavior     move3Player
+
+    PanCameraBehavior   cameraPan1
+    PanCameraBehavior   cameraPan2
+    PanCameraBehavior   cameraPan3
+
+    WaitForBehavior     wait1
+    WaitForBehavior     wait2
+    WaitForBehavior     wait3
+    WaitForBehavior     wait4
+    WaitForBehavior     wait5
+    WaitForBehavior     wait6
+    WaitForBehavior     wait7
+    WaitForBehavior     wait8
+    WaitForBehavior     wait9
+    WaitForBehavior     wait10
+    WaitForBehavior     wait11
+
+
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    DisplayLogBehavior  dialogue4
+
+
+    Array<text> dialogue1Text
+    Array<text> dialogue2Text
+    Array<text> dialogue3Text
+    Array<text> dialogue4Text
+    
+
+    MapTransitionBehavior transition1
+    InitiateCombatBehavior combat
+    Array<text> enemies
+
+    RemoveObjectBehavior remove1
+    RemoveObjectBehavior remove2
+    RemoveObjectBehavior remove3
+    RemoveObjectBehavior remove4
+    RemoveObjectBehavior remove5
+    RemoveObjectBehavior remove6
+    RemoveObjectBehavior remove7
+    RemoveObjectBehavior remove8
+    RemoveObjectBehavior remove9
+    RemoveObjectBehavior remove10
+
+    action Run()
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+    
+    action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+
+        //Player
+        player = main:GetPlayer():playerSprite
+        player:sprite1:SetPosition(1075,175)
+        player:sprite3:SetPosition(1075,175)
+        player:sprite1:SetCollidable(false)
+
+        //NPCs
+        goblin1:LoadImageSheet(goblinImgSheet)
+        goblin1:LoadFrame(goblinImgSheet)
+        goblin1:sprite1:SetPosition(730,1550)
+        main:Add(goblin1:sprite1)
+
+        goblin2:LoadImageSheet(goblinImgSheet)
+        goblin2:LoadFrame(goblinImgSheet)
+        goblin2:sprite1:SetPosition(620,1550)
+        main:Add(goblin2:sprite1)
+
+        goblin3:LoadImageSheet(goblinImgSheet)
+        goblin3:LoadFrame(goblinImgSheet)
+        goblin3:sprite1:SetPosition(1100,826)
+        main:Add(goblin3:sprite1)
+
+        goblin4:LoadImageSheet(goblinImgSheet)
+        goblin4:LoadFrame(goblinImgSheet)
+        goblin4:sprite1:SetPosition(400,525)
+        main:Add(goblin4:sprite1)
+
+        goblin5:LoadImageSheet(goblinImgSheet)
+        goblin5:LoadFrame(goblinImgSheet)
+        goblin5:sprite1:SetPosition(200,175)
+        main:Add(goblin5:sprite1)
+
+        goblin6:LoadImageSheet(goblinImgSheet)
+        goblin6:LoadFrame(goblinImgSheet)
+        goblin6:sprite1:SetPosition(650,-200)
+        main:Add(goblin6:sprite1)
+
+        boy:LoadImageSheet(boyImgSheet)
+        boy:LoadFrame(boyImgSheet)
+        boy:sprite1:SetPosition(320,175)
+        boy:sprite1:SetScale(0.7)
+        main:Add(boy:sprite1)
+
+
+        man1:LoadImageSheet(man1ImgSheet)
+        man1:LoadFrame(man1ImgSheet)
+        man1:sprite1:SetPosition(820,1200)
+        man1:SetFrame(4)
+        man1:ChangeFrame(man1ImgSheet)
+        main:Add(man1:sprite1)
+
+        man2:LoadImageSheet(man2ImgSheet)
+        man2:LoadFrame(man2ImgSheet)
+        man2:sprite1:SetPosition(540,1140)
+        man2:SetFrame(7)
+        man2:ChangeFrame(man2ImgSheet)
+        main:Add(man2:sprite1)
+
+        woman1:LoadImageSheet(woman1ImgSheet)
+        woman1:LoadFrame(woman1ImgSheet)
+        woman1:sprite1:SetPosition(1150,800)
+        woman1:SetFrame(7)
+        woman1:ChangeFrame(woman1ImgSheet)
+        main:Add(woman1:sprite1)
+
+        //Camera
+        main:GetCamera2D():SetPosition(700,1320,0)
+
+        //Dialogue
+        dialogue1Text:Add("Boy: HELP!")
+        dialogue2Text:Add("You step out to a scene of total chaos. Goblins have invaded the town. Nearby, you hear the cries of a young boy.")
+        dialogue3Text:Add("GOBLIN: Look what we got here. Fresh meat!")
+        dialogue3Text:Add("HERO: Get behind me, kid.")
+        dialogue4Text:Add("GOBLIN: You won't be looking so good by the time we're done with you!")
+
+        enemies:Add("Goblin")
+        enemies:Add("Goblin")
+
+        main:Remove(main:GetMap():aboveLayer)
+        main:LoadAboveLayer(main:GetMap(), maps:PROLOGUE_TOWN_MAP)
+    end
+
+    action BehaviorSetup()
+        move1Goblin1:    SetNPCCollidable(false)
+        move1Goblin1:    SetAnimation(goblin1, goblinImgSheet)
+        move1Goblin1:    SetMoveDirection(0, -80, 4.4)
+
+        move2Goblin1:    SetNPCCollidable(false)
+        move2Goblin1:    SetAnimation(goblin1, goblinImgSheet)
+        move2Goblin1:    SetMoveDirection(80, 0, 6)
+
+        move1Goblin2:    SetAnimation(goblin2, goblinImgSheet)
+        move1Goblin2:    SetMoveDirection(0, -80, 5.3)
+
+        move2Goblin2:    SetAnimation(goblin2, goblinImgSheet)
+        move2Goblin2:    SetMoveDirection(-80, 0, 7)
+
+        move1Goblin3:    SetNPCCollidable(false)
+        move1Goblin3:    SetAnimation(goblin3, goblinImgSheet)
+        move1Goblin3:    SetMoveDirection(-80, 0, 4.4)
+
+        move1Goblin4:    SetNPCCollidable(false)
+        move1Goblin4:    SetAnimation(goblin4, goblinImgSheet)
+        move1Goblin4:    SetMoveDirection(80, 0, 16)
+
+        move1Goblin5:    SetNPCCollidable(false)
+        move1Goblin5:    SetAnimation(goblin5, goblinImgSheet)
+        move1Goblin5:    SetMoveDirection(70, 0, 5.7)
+
+        move1Goblin6:    SetNPCCollidable(false)
+        move1Goblin6:    SetAnimation(goblin6, goblinImgSheet)
+        move1Goblin6:    SetMoveDirection(0, 55, 4.7)
+
+        move1Man1:       SetNPCCollidable(false)
+        move1Man1:       SetAnimation(man1, man1ImgSheet)
+        move1Man1:       SetMoveDirection(90, 0, 8)
+
+        move1Man2:       SetNPCCollidable(false)
+        move1Man2:       SetAnimation(man2, man2ImgSheet)
+        move1Man2:       SetMoveDirection(-90, 0, 8)
+
+        move1Woman1:     SetNPCCollidable(false)
+        move1Woman1:     SetAnimation(woman1, woman1ImgSheet)
+        move1Woman1:     SetMoveDirection(-150, 0, 3)
+
+        move2Woman1:     SetAnimation(woman1, woman1ImgSheet)
+        move2Woman1:     SetMoveDirection(0, -140, 30)
+
+        move1Boy:        SetNPCCollidable(false)
+        move1Boy:        SetAnimation(boy, boyImgSheet)
+        move1Boy:        SetMoveDirection(90, 0, 4)
+        move2Boy:        SetAnimation(boy, boyImgSheet)
+        move2Boy:        SetMoveDirection(0, -60, 0.5)
+        move3Boy:        SetAnimation(boy, boyImgSheet)
+        move3Boy:        SetMoveDirection(90, 0, 2.5)
+        move4Boy:        SetAnimation(boy, boyImgSheet)
+        move4Boy:        SetMoveDirection(-30, 0, 0.5)
+        
+
+        move1Player:     SetNPCCollidable(false)
+        move1Player:     SetAnimation(player, playerImgSheet)
+        move1Player:     SetMoveDirection(0, -90, 0.4)
+        move2Player:     SetAnimation(player, playerImgSheet)
+        move2Player:     SetMoveDirection(-90, 0, 3.3)
+        move3Player:     SetAnimation(player, playerImgSheet)
+        move3Player:     SetMoveDirection(-30, 0, 2)
+
+        cameraPan1:     SetCameraPan(0, -60, 17.5)
+        cameraPan2:     SetCameraPan(90, 0, 4.4)
+        cameraPan3:     SetCameraPan(-90, 0, 3)
+
+        wait1:          SetWaitDuration(1)
+        wait2:          SetWaitDuration(1)
+        wait3:          SetWaitDuration(2.4)
+        wait4:          SetWaitDuration(0.7)
+        wait5:          SetWaitDuration(3)
+        wait6:          SetWaitDuration(1)
+        wait7:          SetWaitDuration(2)
+        wait8:          SetWaitDuration(1)
+        wait9:          SetWaitDuration(3)
+        wait10:         SetWaitDuration(1)
+        wait11:         SetWaitDuration(1)
+
+        dialogue1:      SetRemovalArray(main:GetRemovalArray())
+        dialogue1:      SetGame(main)
+        dialogue1:      SetCamera(main:GetCamera2D())
+        dialogue1:      SetLog(dialogue1Text)
+
+        dialogue2:      SetRemovalArray(main:GetRemovalArray())
+        dialogue2:      SetGame(main)
+        dialogue2:      SetCamera(main:GetCamera2D())
+        dialogue2:      SetLog(dialogue2Text)
+
+        dialogue3:      SetRemovalArray(main:GetRemovalArray())
+        dialogue3:      SetGame(main)
+        dialogue3:      SetCamera(main:GetCamera2D())
+        dialogue3:      SetLog(dialogue3Text)
+
+        dialogue4:      SetRemovalArray(main:GetRemovalArray())
+        dialogue4:      SetGame(main)
+        dialogue4:      SetCamera(main:GetCamera2D())
+        dialogue4:      SetLog(dialogue4Text)
+
+        transition1:    SetTransition(tempMap, maps:FOREST_CLEARING_MAP)
+        transition1:    SetCinematic(forestClearing)
+        transition1:    SetMusic("zapsplat_nature_forest_ambience_summer_creek_close_by_loud_insects_cicada_australia_27785")
+
+        remove1:        SetDrawable(boy:sprite1)
+        remove2:        SetDrawable(goblin1:sprite1)
+        remove3:        SetDrawable(goblin2:sprite1)
+        remove4:        SetDrawable(goblin3:sprite1)
+        remove5:        SetDrawable(goblin4:sprite1)
+        remove6:        SetDrawable(goblin5:sprite1)
+        remove7:        SetDrawable(goblin6:sprite1)
+        remove8:        SetDrawable(man1:sprite1)
+        remove9:        SetDrawable(man2:sprite1)
+        remove10:       SetDrawable(woman1:sprite1)
+
+        combat:SetEnemyList(enemies)   
+             
+    end
+
+    action EnqueueBehaviors()
+        cineSequencer:AddCineEvent(move1Goblin1, false)
+        cineSequencer:AddCineEvent(move1Goblin2, false)
+        cineSequencer:AddCineEvent(wait1, true)
+        cineSequencer:AddCineEvent(move1Man1, false)
+        cineSequencer:AddCineEvent(wait2, true)
+        cineSequencer:AddCineEvent(move1Man2, false)
+        cineSequencer:AddCineEvent(cameraPan1, false)
+        cineSequencer:AddCineEvent(wait3, true)
+        cineSequencer:AddCineEvent(move2Goblin1, false)
+        cineSequencer:AddCineEvent(wait4, true)
+        cineSequencer:AddCineEvent(move2Goblin2, false)
+        cineSequencer:AddCineEvent(wait5, true)
+        cineSequencer:AddCineEvent(move1Woman1, false)
+        cineSequencer:AddCineEvent(wait6, true)
+        cineSequencer:AddCineEvent(move1Goblin3, false)
+        cineSequencer:AddCineEvent(wait7, true)
+        cineSequencer:AddCineEvent(move2Woman1, false)
+        cineSequencer:AddCineEvent(wait8, true)
+        cineSequencer:AddCineEvent(move1Goblin4, false)
+        cineSequencer:AddCineEvent(wait9, true)
+        cineSequencer:AddCineEvent(move1Goblin5, false)
+        cineSequencer:AddCineEvent(move1Goblin6, false)
+        cineSequencer:AddCineEvent(move1Boy, true)
+        cineSequencer:AddCineEvent(move2Boy, true)
+        cineSequencer:AddCineEvent(wait10, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+        cineSequencer:AddCineEvent(cameraPan2, true)
+        cineSequencer:AddCineEvent(dialogue2, true)
+        cineSequencer:AddCineEvent(move1Player, true)
+        cineSequencer:AddCineEvent(move2Player, false)
+        cineSequencer:AddCineEvent(cameraPan3, true)
+        cineSequencer:AddCineEvent(dialogue3, true)
+        cineSequencer:AddCineEvent(move3Player, false)
+        cineSequencer:AddCineEvent(move3Boy, true)
+        cineSequencer:AddCineEvent(move4Boy, true)
+        cineSequencer:AddCineEvent(dialogue4, true)
+        cineSequencer:AddCineEvent(wait11, true)
+        cineSequencer:AddCineEvent(combat, true)
+//        cineSequencer:AddCineEvent(remove1, false)
+        cineSequencer:AddCineEvent(remove2, false)
+        cineSequencer:AddCineEvent(remove3, false)
+        cineSequencer:AddCineEvent(remove4, false)
+        cineSequencer:AddCineEvent(remove5, false)
+        cineSequencer:AddCineEvent(remove6, false)
+        cineSequencer:AddCineEvent(remove7, false)
+        cineSequencer:AddCineEvent(remove8, false)
+        cineSequencer:AddCineEvent(remove9, false)
+        cineSequencer:AddCineEvent(remove10, true) 
+        
+    end
+
+end

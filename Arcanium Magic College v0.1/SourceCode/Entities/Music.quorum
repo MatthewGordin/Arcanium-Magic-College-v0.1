@@ -1,0 +1,77 @@
+/**********************************************************
+  >> COMMENTS CURRENT INCOMPLETE AND WIP! <<
+
+  Class for Music / Songs
+  Inherits from GameSounds to for general usage
+
+  Can Load, Play, or Stop (Uses stream for larger files)
+  Has looping set by default
+  Starts at MinVolume
+  * Increases to MaxVolume if 'willFade' is set to TRUE
+**********************************************************/
+use Libraries.Sound.Audio
+use Libraries.System.File
+
+class Music is GameSound
+    File filePath = GetFile()
+    number maxVolume = 1
+    boolean willFade = false
+    number fadeRate = 0.0000001
+    number originalVolume = 1
+
+    action LoadAudio
+        LoadToStream(filePath)
+        EnableLooping()
+    end
+
+    action PlayAudio(number systemVolume)
+        SetVolume(GetMinVolume() * systemVolume)
+        Play()
+    end
+
+    action UpdateAudio
+        if IsPlaying()
+            Stream()
+            if willFade
+                if GetVolume() < GetMaxVolume()
+                    number newVolume = GetVolume() + fadeRate
+                    SetVolume(newVolume)
+                end
+            end
+        end
+    end
+
+    action StopAudio
+        if IsPlaying()
+            Stop()
+        end
+    end
+
+    /**********************************************************
+             Getters & Setters for private variables            
+    **********************************************************/
+
+    action SetMaxVolume (number newMax)
+        maxVolume = newMax
+    end
+
+    action GetMaxVolume() returns number
+        return maxVolume
+    end
+
+    action SetWillFade (boolean newFade)
+        willFade = newFade
+    end
+
+    action GetWillFade() returns boolean
+        return willFade
+    end
+
+    action SetFadeRate (number newRate)
+        fadeRate = newRate
+    end
+
+    action GetFadeRate() returns number
+        return fadeRate
+    end
+end

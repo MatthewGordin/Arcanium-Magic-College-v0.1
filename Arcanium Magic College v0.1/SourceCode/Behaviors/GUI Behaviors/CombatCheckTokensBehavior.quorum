@@ -1,0 +1,87 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Game
+
+class CombatCheckTokensBehavior is NextMenuPageBehavior, CombatAddTokenBehavior
+
+    Game game
+    Array<Array <Item2D>> pages
+    Array<Array <integer>> xPosition
+    Array<Array <integer>> yPosition
+    Array<CombatDamageTargetBehavior> damageBehaviors
+    integer currentIndex = 0
+    integer currentTokens = 0
+    integer spellID = 0
+
+    action Run(BehaviorEvent event)
+        if currentIndex + 1 not= pages:GetSize() and currentTokens not= 0
+            integer counter = 0
+
+            repeat while counter < pages:Get(currentIndex):GetSize()
+                pages:Get(currentIndex):Get(counter):SetPosition(-1000, -1000)
+
+                counter = counter + 1
+            end
+
+            Spell spell
+            spell:FillSpell(spellID)
+            integer tempIndex = 0
+
+            if spell:GetMultiTarget()
+                tempIndex = currentIndex + 2
+            else
+                tempIndex = currentIndex + 1
+            end
+            counter = 0
+
+            repeat while counter < pages:Get(tempIndex):GetSize()
+                pages:Get(tempIndex):Get(counter):SetPosition(xPosition:Get(tempIndex):Get(counter), yPosition:Get(tempIndex):Get(counter))
+
+                counter = counter + 1
+            end
+
+            counter = 0
+
+            repeat while counter < damageBehaviors:GetSize()
+                damageBehaviors:Get(counter):SetSpellID(spellID)
+                counter = counter + 1
+            end
+
+            game:SetFocus(pages:Get(tempIndex):Get(0))
+        end
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetPages(Array<Array <Item2D>> array)
+        pages = array
+    end
+
+    action SetXPosition(Array<Array <integer>> array)
+        xPosition = array
+    end
+
+    action SetYPosition(Array<Array <integer>> array)
+        yPosition = array
+    end
+
+    action SetCurrentIndex(integer index)
+        currentIndex = index
+    end
+
+    action SetCurrentTokens(integer tokens)
+        currentTokens = tokens
+    end
+
+    action SetSpellID(integer id)
+        spellID = id
+    end
+
+    action SetDamageBehaviors(Array<CombatDamageTargetBehavior> newArray)
+        damageBehaviors = newArray
+    end
+end

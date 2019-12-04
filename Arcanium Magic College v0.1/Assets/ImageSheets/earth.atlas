@@ -1,0 +1,62 @@
+
+earth.png
+size: 1024,128
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Earth frame 1
+  rotate: false
+  xy: 493, 2
+  size: 90, 89
+  orig: 90, 89
+  offset: 0, 0
+  index: -1
+Earth frame 2
+  rotate: false
+  xy: 2, 4
+  size: 98, 87
+  orig: 98, 87
+  offset: 0, 0
+  index: -1
+Earth frame 3
+  rotate: false
+  xy: 677, 8
+  size: 92, 83
+  orig: 92, 83
+  offset: 0, 0
+  index: -1
+Earth frame 4
+  rotate: false
+  xy: 397, 6
+  size: 94, 85
+  orig: 94, 85
+  offset: 0, 0
+  index: -1
+Earth frame 5
+  rotate: false
+  xy: 299, 8
+  size: 96, 83
+  orig: 96, 83
+  offset: 0, 0
+  index: -1
+Earth frame 6
+  rotate: false
+  xy: 102, 3
+  size: 94, 88
+  orig: 94, 88
+  offset: 0, 0
+  index: -1
+Earth frame 7
+  rotate: false
+  xy: 198, 9
+  size: 99, 82
+  orig: 99, 82
+  offset: 0, 0
+  index: -1
+Earth frame 8
+  rotate: false
+  xy: 585, 3
+  size: 90, 88
+  orig: 90, 88
+  offset: 0, 0
+  index: -1

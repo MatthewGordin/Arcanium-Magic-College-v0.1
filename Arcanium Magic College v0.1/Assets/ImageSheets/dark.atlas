@@ -1,0 +1,62 @@
+
+dark.png
+size: 1024,512
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Dark frame 1
+  rotate: false
+  xy: 2, 197
+  size: 233, 194
+  orig: 233, 194
+  offset: 0, 0
+  index: -1
+Dark frame 2
+  rotate: false
+  xy: 703, 212
+  size: 227, 179
+  orig: 227, 179
+  offset: 0, 0
+  index: -1
+Dark frame 3
+  rotate: false
+  xy: 468, 210
+  size: 233, 181
+  orig: 233, 181
+  offset: 0, 0
+  index: -1
+Dark frame 4
+  rotate: false
+  xy: 237, 7
+  size: 218, 195
+  orig: 218, 195
+  offset: 0, 0
+  index: -1
+Dark frame 5
+  rotate: false
+  xy: 2, 2
+  size: 225, 193
+  orig: 225, 193
+  offset: 0, 0
+  index: -1
+Dark frame 6
+  rotate: false
+  xy: 237, 204
+  size: 229, 187
+  orig: 229, 187
+  offset: 0, 0
+  index: -1
+Dark frame 7
+  rotate: false
+  xy: 468, 14
+  size: 218, 194
+  orig: 218, 194
+  offset: 0, 0
+  index: -1
+Dark frame 8
+  rotate: false
+  xy: 688, 13
+  size: 204, 195
+  orig: 204, 195
+  offset: 0, 0
+  index: -1

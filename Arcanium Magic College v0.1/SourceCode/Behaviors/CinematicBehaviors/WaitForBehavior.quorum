@@ -1,0 +1,41 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+
+class WaitForBehavior is Behavior
+    
+    number maxTime = 0
+    number currTime = 0
+
+    boolean finished = false
+    boolean indefinite = false
+
+    action Run (BehaviorEvent event)
+        currTime = 0
+    end
+
+    action Update(number seconds)
+        if(not indefinite)
+            if(currTime <= maxTime)
+              currTime = currTime + seconds
+            else
+                finished = true
+            end
+        else
+            
+        end
+    end
+
+    action SetWaitDuration(number duration)
+        maxTime = duration
+    end
+    
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetIndefinite
+        indefinite = true
+    end
+
+end

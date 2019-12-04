@@ -1,0 +1,561 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class RuinedTown is Cinematic
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+    MapList maps
+    Color color1
+    Color color2
+    Color color3
+    Drawable rectangle1
+    Drawable rectangle2
+    Drawable logo
+
+    //Actors
+    Animation player
+    Animation boy
+    Animation man1
+    Animation man2
+    text playerImgSheet = "Hero"
+    text boyImgSheet = "Boy"
+    text man1ImgSheet = "Man1"
+    text man2ImgSheet = "Man2"
+
+    //Boy
+    MoveNPCBehavior     move1Boy
+    MoveNPCBehavior     move2Boy
+    MoveNPCBehavior     move3Boy
+    MoveNPCBehavior     move4Boy
+    MoveNPCBehavior     move5Boy
+    MoveNPCBehavior     move6Boy
+    MoveNPCBehavior     move7Boy
+    MoveNPCBehavior     move8Boy
+    MoveNPCBehavior     move9Boy
+    MoveNPCBehavior     move10Boy
+    MoveNPCBehavior     move11Boy
+    MoveNPCBehavior     move12Boy
+
+    MoveNPCBehavior     move1Player
+    MoveNPCBehavior     move2Player
+    MoveNPCBehavior     move3Player
+    MoveNPCBehavior     move4Player
+    MoveNPCBehavior     move5Player
+    MoveNPCBehavior     move6Player
+    MoveNPCBehavior     move7Player
+    MoveNPCBehavior     move8Player
+    MoveNPCBehavior     move9Player
+    MoveNPCBehavior     move10Player
+    MoveNPCBehavior     move11Player
+    MoveNPCBehavior     move12Player
+    MoveNPCBehavior     move13Player
+    MoveNPCBehavior     move14Player
+
+    MoveNPCBehavior     move1Man1
+    MoveNPCBehavior     move2Man1
+    MoveNPCBehavior     move3Man1
+    MoveNPCBehavior     move4Man1
+    MoveNPCBehavior     move5Man1
+    MoveNPCBehavior     move6Man1
+
+
+    MoveNPCBehavior     move1Man2
+    MoveNPCBehavior     move2Man2
+    MoveNPCBehavior     move3Man2
+    MoveNPCBehavior     move4Man2
+    MoveNPCBehavior     move5Man2
+    MoveNPCBehavior     move6Man2
+    MoveNPCBehavior     move7Man2
+    MoveNPCBehavior     move8Man2
+    MoveNPCBehavior     move9Man2
+    MoveNPCBehavior     move10Man2
+    MoveNPCBehavior     move11Man2
+
+
+    PanCameraBehavior   cameraPan1
+    PanCameraBehavior   cameraPan2
+    PanCameraBehavior   cameraPan3
+    PanCameraBehavior   cameraPan4
+    PanCameraBehavior   cameraPan5
+
+    WaitForBehavior     wait1
+    WaitForBehavior     wait2
+    WaitForBehavior     wait3
+    WaitForBehavior     wait4
+    WaitForBehavior     wait5
+    WaitForBehavior     wait6
+    WaitForBehavior     wait7
+    WaitForBehavior     wait8
+    WaitForBehavior     wait9
+    WaitForBehavior     wait10
+    WaitForBehavior     wait11
+    WaitForBehavior     wait12
+    WaitForBehavior     wait13
+    WaitForBehavior     wait14
+    WaitForBehavior     wait15
+    WaitForBehavior     wait16
+    WaitForBehavior     wait17
+    WaitForBehavior     wait18
+
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    DisplayLogBehavior  dialogue4
+    DisplayLogBehavior  dialogue5
+    DisplayLogBehavior  dialogue6
+    DisplayLogBehavior  dialogue7
+    DisplayLogBehavior  dialogue8
+    DisplayLogBehavior  dialogue9
+    DisplayLogBehavior  dialogue10
+    DisplayLogBehavior  dialogue11
+    DisplayLogBehavior  dialogue12
+    DisplayLogBehavior  dialogue13
+    DisplayLogBehavior  dialogue14
+    DisplayLogBehavior  dialogue15
+    DisplayLogBehavior  dialogue16
+
+    ColorFadeBehavior   fadeToBlack
+    ColorFadeBehavior   fadeInLogo
+    ColorFadeBehavior   fadeInBackground
+
+    RemoveObjectBehavior remove1
+    RemoveObjectBehavior remove2
+    RemoveObjectBehavior remove3
+
+    Array<text> dialogue1Text
+    Array<text> dialogue2Text
+    Array<text> dialogue3Text
+    Array<text> dialogue4Text
+    Array<text> dialogue5Text
+    Array<text> dialogue6Text
+    Array<text> dialogue7Text
+    Array<text> dialogue8Text
+    Array<text> dialogue9Text
+    Array<text> dialogue10Text
+    Array<text> dialogue11Text
+    Array<text> dialogue12Text
+    Array<text> dialogue13Text
+    Array<text> dialogue14Text
+    Array<text> dialogue15Text
+    Array<text> dialogue16Text
+
+    action Run()
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+
+    action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+
+        //Player
+        player = main:GetPlayer():playerSprite
+        player:sprite1:SetPosition(700,-50)
+        player:sprite3:SetPosition(700,-50)
+        player:sprite3:SetCollidable(false)
+
+        //Boy
+        boy:LoadImageSheet(boyImgSheet)
+        boy:LoadFrame(boyImgSheet)
+        boy:sprite1:SetPosition(650,-40)
+        boy:sprite1:SetScale(0.7)
+        main:Add(boy:sprite1)
+
+        //Man1
+        man1:LoadImageSheet(man1ImgSheet)
+        man1:LoadFrame(man1ImgSheet)
+        man1:sprite1:SetPosition(1210,900)
+        man1:SetFrame(1)
+        man1:ChangeFrame(man1ImgSheet)
+        main:Add(man1:sprite1)
+
+        //Man2
+        man2:LoadImageSheet(man2ImgSheet)
+        man2:LoadFrame(man2ImgSheet)
+        man2:sprite1:SetPosition(1252,900)
+        man2:SetFrame(1)
+        man2:ChangeFrame(man2ImgSheet)
+        main:Add(man2:sprite1)
+
+        //Camera
+        main:GetCamera2D():SetPosition(665,300,0)
+
+        //Dialogue
+        dialogue1Text:Add("HERO: My home... ")
+        dialogue2Text:Add("Everything has either been taken or destroyed. All that remains of your home is ruin.")
+        dialogue3Text:Add("HERO: Let's go find your parents.")
+        dialogue4Text:Add("Suddenly in the distance, you hear footsteps.")
+        dialogue4Text:Add("HERO: Quick! Hide!")
+        dialogue5Text:Add("JAKOB: We have recovered everyone we could, Thomas. There is no need to be here. ")
+        dialogue5Text:Add("THOMAS: Not everyone.")
+        dialogue5Text:Add("THOMAS: My son is still out there, Jakob. We must keep searching.")
+        dialogue6Text:Add("JAKOB: If we have not found him by now...")
+        dialogue7Text:Add("THOMAS: He is alive. I know it.")
+        dialogue8Text:Add("BOY: Dad?")
+        dialogue9Text:Add("THOMAS: You're safe! I thought I'd lost you!")
+        dialogue9Text:Add("THOMAS: How are you here? We looked everywhere.")
+        dialogue9Text:Add("BOY: He saved my life.")
+        dialogue9Text:Add("THOMAS: Who?")
+        dialogue10Text:Add("BOY: He was here earlier...")
+        dialogue11Text:Add("JAKOB: Thomas, they may come back. We must leave soon.")
+        dialogue12Text:Add("THOMAS: Let's go son.")
+        dialogue13Text:Add("You watch them walk down the road, on their way with hopes to rebuild what was lost.")
+        dialogue13Text:Add("But as magic courses through you, you know you must choose a different path.")
+        dialogue14Text:Add("HERO: 'Come to the Arcanium'... ")
+        dialogue14Text:Add("You look out into the open forest, with your old life behind you.")
+        dialogue14Text:Add("HERO: A new journey it is then.")
+        dialogue15Text:Add("HERO: To the Arcanium.")
+        dialogue16Text:Add("Made by: Albert A. Antero, Jania Carla Cunanan, Ryan Desacola, Ean Engdahl, Matthew Gordin...")
+        dialogue16Text:Add("...Maria Lisondra, Tyler Proffitt, Christian Saracay, and Lisel Anne Valdez.")
+        dialogue16Text:Add("Special Thanks To: Dr. Andreas Stefik, Molly Marks")
+
+        main:Remove(main:GetMap():aboveLayer)
+        main:LoadAboveLayer(main:GetMap(), maps:RUINED_TOWN_MAP)  
+
+        //PostProcessing
+        color1:SetColor(0,0,0,0)
+        color3:SetColor(1,1,1,1)
+        rectangle1:SetColor(color1)
+        main:Add(rectangle1)
+        rectangle1:LoadFilledRectangle(1600,1600,color1)
+        rectangle2:LoadFilledRectangle(800,800, color3)
+        logo:Load("Assets\ArcaniumLogo.png")
+        logo:SetColor(1,1,1,0)
+        logo:SetName("ArcaniumLogo")
+        
+    end
+
+    action BehaviorSetup()
+        move1Player:     SetNPCCollidable(false)
+        move1Player:     SetAnimation(player, playerImgSheet)
+        move1Player:     SetMoveDirection(0, 50, 6)
+        move2Player:     SetAnimation(player, playerImgSheet)
+        move2Player:     SetFrame(7)
+        move3Player:     SetAnimation(player, playerImgSheet)
+        move3Player:     SetMoveDirection(50, 0, 3.2)
+        move4Player:     SetAnimation(player, playerImgSheet)
+        move4Player:     SetFrame(4)
+        move5Player:     SetAnimation(player, playerImgSheet)
+        move5Player:     SetFrame(7)
+        move6Player:     SetAnimation(player, playerImgSheet)
+        move6Player:     SetMoveDirection(80, 0, 1.6)
+        move7Player:     SetAnimation(player, playerImgSheet)
+        move7Player:     SetMoveDirection(0, -80, 0.4)
+        move8Player:     SetAnimation(player, playerImgSheet)
+        move8Player:     SetMoveDirection(40, 0, 0.8)
+        move9Player:     SetAnimation(player, playerImgSheet)
+        move9Player:     SetMoveDirection(-40, 0, 3)
+        move10Player:    SetAnimation(player, playerImgSheet)
+        move10Player:    SetMoveDirection(0, 55, 1)
+        move11Player:    SetAnimation(player, playerImgSheet)
+        move11Player:    SetFrame(1)
+        move12Player:    SetAnimation(player, playerImgSheet)
+        move12Player:    SetMoveDirection(-60, 0, 2.5)
+        move13Player:    SetAnimation(player, playerImgSheet)
+        move13Player:    SetFrame(1)
+        move14Player:    SetAnimation(player, playerImgSheet)
+        move14Player:    SetMoveDirection(0, -60, 10)
+
+        move1Boy:        SetNPCCollidable(false)
+        move1Boy:        SetAnimation(boy, boyImgSheet)
+        move1Boy:        SetMoveDirection(0, 50, 6.5)
+        move2Boy:        SetAnimation(boy, boyImgSheet)
+        move2Boy:        SetFrame(7)
+        move3Boy:        SetAnimation(boy, boyImgSheet)
+        move3Boy:        SetMoveDirection(0, -40, 0.5)
+        move4Boy:        SetAnimation(boy, boyImgSheet)
+        move4Boy:        SetMoveDirection(40, 0, 4)
+        move5Boy:        SetAnimation(boy, boyImgSheet)
+        move5Boy:        SetMoveDirection(80, 0, 2.5)
+        move6Boy:        SetAnimation(boy, boyImgSheet)
+        move6Boy:        SetMoveDirection(0, 70, 3.8)
+        move7Boy:        SetAnimation(boy, boyImgSheet)
+        move7Boy:        SetMoveDirection(70, 0, 0.5)
+        move8Boy:        SetAnimation(boy, boyImgSheet)
+        move8Boy:        SetMoveDirection(80, 0, 1.2)
+        move9Boy:        SetAnimation(boy, boyImgSheet)
+        move9Boy:        SetMoveDirection(-80, 0, 2.5)
+        move10Boy:       SetAnimation(boy, boyImgSheet)
+        move10Boy:       SetFrame(1)
+        move11Boy:       SetAnimation(boy, boyImgSheet)
+        move11Boy:       SetMoveDirection(50, 0, 7.4)
+        move12Boy:       SetAnimation(boy, boyImgSheet)
+        move12Boy:       SetMoveDirection(0, 50, 10)
+
+        move1Man1:       SetNPCCollidable(false)
+        move1Man1:       SetAnimation(man1, man1ImgSheet)
+        move1Man1:       SetMoveDirection(0, -30, 12)
+        move2Man1:       SetAnimation(man1, man1ImgSheet)
+        move2Man1:       SetFrame(7)
+        move3Man1:       SetAnimation(man1, man1ImgSheet)
+        move3Man1:       SetFrame(4)
+        move4Man1:       SetAnimation(man1, man1ImgSheet)
+        move4Man1:       SetMoveDirection(-50, 0, 2)
+        move5Man1:       SetAnimation(man1, man1ImgSheet)
+        move5Man1:       SetMoveDirection(30, 0, 5)
+        move6Man1:       SetAnimation(man1, man1ImgSheet)
+        move6Man1:       SetMoveDirection(0, 30, 10)
+
+        move1Man2:       SetNPCCollidable(false)
+        move1Man2:       SetAnimation(man2, man2ImgSheet)
+        move1Man2:       SetMoveDirection(0, -30, 12)
+        move2Man2:       SetAnimation(man2, man2ImgSheet)
+        move2Man2:       SetFrame(4)
+        move3Man2:       SetAnimation(man2, man2ImgSheet)
+        move3Man2:       SetFrame(4)
+        move4Man2:       SetAnimation(man2, man2ImgSheet)
+        move4Man2:       SetMoveDirection(0, -80, 0.2)
+        move5Man2:       SetAnimation(man2, man2ImgSheet)
+        move5Man2:       SetMoveDirection(-80, 0 , 1)
+        move6Man2:       SetAnimation(man2, man2ImgSheet)
+        move6Man2:       SetMoveDirection(-80, 0 , 2.5)
+        move7Man2:       SetAnimation(man2, man2ImgSheet)
+        move7Man2:       SetFrame(1)
+        move8Man2:       SetAnimation(man2, man2ImgSheet)
+        move8Man2:       SetFrame(7)
+        move9Man2:       SetAnimation(man2, man2ImgSheet)
+        move9Man2:       SetFrame(4)
+        move10Man2:      SetAnimation(man2, man2ImgSheet)
+        move10Man2:      SetMoveDirection(30, 0, 8)
+        move11Man2:      SetAnimation(man2, man2ImgSheet)
+        move11Man2:      SetMoveDirection(0, 30 , 12)
+
+        cameraPan1:     SetCameraPan(40, 0, 5)
+        cameraPan2:     SetCameraPan(50, 50, 4.4)
+        cameraPan3:     SetCameraPan(0, 25, 3)
+        cameraPan4:     SetCameraPan(0, -35, 3)
+        cameraPan5:     SetCameraPan(-12.5, -17, 11)
+
+
+        wait1:          SetWaitDuration(1)
+        wait2:          SetWaitDuration(3.5)
+        wait3:          SetWaitDuration(3)
+        wait4:          SetWaitDuration(1)
+        wait5:          SetWaitDuration(2)
+        wait6:          SetWaitDuration(1)
+        wait7:          SetWaitDuration(1)
+        wait8:          SetWaitDuration(3.5)
+        wait9:          SetWaitDuration(5.5)
+        wait10:         SetWaitDuration(2)
+        wait11:         SetWaitDuration(2)
+        wait12:         SetWaitDuration(5)
+        wait13:         SetWaitDuration(5)
+        wait14:         SetWaitDuration(4)
+        wait15:         SetWaitDuration(1)
+        wait16:         SetWaitDuration(1)
+        wait17:         SetWaitDuration(5)
+        wait18:         SetIndefinite()
+
+
+
+        dialogue1:      SetRemovalArray(main:GetRemovalArray())
+        dialogue1:      SetGame(main)
+        dialogue1:      SetCamera(main:GetCamera2D())
+        dialogue1:      SetLog(dialogue1Text)
+
+        dialogue2:      SetRemovalArray(main:GetRemovalArray())
+        dialogue2:      SetGame(main)
+        dialogue2:      SetCamera(main:GetCamera2D())
+        dialogue2:      SetLog(dialogue2Text)
+
+        dialogue3:      SetRemovalArray(main:GetRemovalArray())
+        dialogue3:      SetGame(main)
+        dialogue3:      SetCamera(main:GetCamera2D())
+        dialogue3:      SetLog(dialogue3Text)
+
+        dialogue4:      SetRemovalArray(main:GetRemovalArray())
+        dialogue4:      SetGame(main)
+        dialogue4:      SetCamera(main:GetCamera2D())
+        dialogue4:      SetLog(dialogue4Text)
+
+        dialogue5:      SetRemovalArray(main:GetRemovalArray())
+        dialogue5:      SetGame(main)
+        dialogue5:      SetCamera(main:GetCamera2D())
+        dialogue5:      SetLog(dialogue5Text)
+
+        dialogue6:      SetRemovalArray(main:GetRemovalArray())
+        dialogue6:      SetGame(main)
+        dialogue6:      SetCamera(main:GetCamera2D())
+        dialogue6:      SetLog(dialogue6Text)
+
+        dialogue7:      SetRemovalArray(main:GetRemovalArray())
+        dialogue7:      SetGame(main)
+        dialogue7:      SetCamera(main:GetCamera2D())
+        dialogue7:      SetLog(dialogue7Text)
+
+        dialogue8:      SetRemovalArray(main:GetRemovalArray())
+        dialogue8:      SetGame(main)
+        dialogue8:      SetCamera(main:GetCamera2D())
+        dialogue8:      SetLog(dialogue8Text)
+
+        dialogue9:      SetRemovalArray(main:GetRemovalArray())
+        dialogue9:      SetGame(main)
+        dialogue9:      SetCamera(main:GetCamera2D())
+        dialogue9:      SetLog(dialogue9Text)
+
+        dialogue10:      SetRemovalArray(main:GetRemovalArray())
+        dialogue10:      SetGame(main)
+        dialogue10:      SetCamera(main:GetCamera2D())
+        dialogue10:      SetLog(dialogue10Text)
+
+        dialogue11:      SetRemovalArray(main:GetRemovalArray())
+        dialogue11:      SetGame(main)
+        dialogue11:      SetCamera(main:GetCamera2D())
+        dialogue11:      SetLog(dialogue11Text)
+
+        dialogue12:      SetRemovalArray(main:GetRemovalArray())
+        dialogue12:      SetGame(main)
+        dialogue12:      SetCamera(main:GetCamera2D())
+        dialogue12:      SetLog(dialogue12Text)
+
+        dialogue13:      SetRemovalArray(main:GetRemovalArray())
+        dialogue13:      SetGame(main)
+        dialogue13:      SetCamera(main:GetCamera2D())
+        dialogue13:      SetLog(dialogue13Text)
+
+        dialogue14:      SetRemovalArray(main:GetRemovalArray())
+        dialogue14:      SetGame(main)
+        dialogue14:      SetCamera(main:GetCamera2D())
+        dialogue14:      SetLog(dialogue14Text)
+
+        dialogue15:      SetRemovalArray(main:GetRemovalArray())
+        dialogue15:      SetGame(main)
+        dialogue15:      SetCamera(main:GetCamera2D())
+        dialogue15:      SetLog(dialogue15Text)
+
+        dialogue16:      SetRemovalArray(main:GetRemovalArray())
+        dialogue16:      SetGame(main)
+        dialogue16:      SetCamera(main:GetCamera2D())
+        dialogue16:      SetLog(dialogue16Text)
+
+        fadeToBlack:     SetDrawable(rectangle1)
+        fadeToBlack:     SetFade(0,0,0,1,7)
+
+        fadeInLogo:      SetDrawable(logo)
+        fadeInLogo:      AddDuringScene(main)
+        fadeInLogo:      SetFade(1,1,1,1,5)
+
+        fadeInBackground:SetDrawable(rectangle2)
+        fadeInBackground:AddDuringScene(main)
+        fadeInBackground:SetFade(1,1,1,1,3)
+
+        remove1:         SetDrawable(boy:sprite1)
+        remove2:         SetDrawable(man1:sprite1)
+        remove3:         SetDrawable(man2:sprite1)
+
+
+    end
+
+    action EnqueueBehaviors()
+        cineSequencer:AddCineEvent(wait1, true)
+        cineSequencer:AddCineEvent(move1Boy, false)
+        cineSequencer:AddCineEvent(move1Player, false)
+        cineSequencer:AddCineEvent(wait2, true)
+        cineSequencer:AddCineEvent(cameraPan1, false)
+        cineSequencer:AddCineEvent(wait3, true)
+        cineSequencer:AddCineEvent(move2Player, true)
+        cineSequencer:AddCineEvent(wait4, true)
+        cineSequencer:AddCineEvent(move2Boy, true)
+        cineSequencer:AddCineEvent(wait5, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+
+        cineSequencer:AddCineEvent(move3Player, true)
+        cineSequencer:AddCineEvent(dialogue2, true)
+
+        cineSequencer:AddCineEvent(move3Boy, true)
+        cineSequencer:AddCineEvent(move4Boy, true)
+        cineSequencer:AddCineEvent(wait6, true)
+        cineSequencer:AddCineEvent(move4Player, true)
+        cineSequencer:AddCineEvent(wait7, true)
+        cineSequencer:AddCineEvent(dialogue3, true)
+
+        cineSequencer:AddCineEvent(move5Player, true)
+        cineSequencer:AddCineEvent(dialogue4, true)
+
+        cineSequencer:AddCineEvent(move5Boy, false)
+        cineSequencer:AddCineEvent(move6Player, true)
+        cineSequencer:AddCineEvent(cameraPan2, false)
+        cineSequencer:AddCineEvent(move7Player, true)
+        cineSequencer:AddCineEvent(wait8, true)
+        cineSequencer:AddCineEvent(cameraPan3, false)
+        cineSequencer:AddCineEvent(move1Man1, false)
+        cineSequencer:AddCineEvent(move1Man2, false)
+        cineSequencer:AddCineEvent(wait9, true)
+        cineSequencer:AddCineEvent(dialogue5, true)
+
+        cineSequencer:AddCineEvent(move2Man1, true)
+        cineSequencer:AddCineEvent(dialogue6, true)
+
+        cineSequencer:AddCineEvent(move2Man2, true)  
+        cineSequencer:AddCineEvent(dialogue7, true)
+
+        cineSequencer:AddCineEvent(move6Boy, true)
+        cineSequencer:AddCineEvent(move3Man1, true)
+        cineSequencer:AddCineEvent(move3Man2, true)
+        cineSequencer:AddCineEvent(move7Boy, true)
+        cineSequencer:AddCineEvent(dialogue8, true)
+
+        cineSequencer:AddCineEvent(move4Man2, true)
+        cineSequencer:AddCineEvent(move5Man2, true) 
+        cineSequencer:AddCineEvent(move8Boy, true)
+        cineSequencer:AddCineEvent(dialogue9, true)
+
+        cineSequencer:AddCineEvent(move8Player, false)
+        cineSequencer:AddCineEvent(move9Boy, true)
+        cineSequencer:AddCineEvent(move10Boy, true)
+        cineSequencer:AddCineEvent(cameraPan4, false)
+        cineSequencer:AddCineEvent(move6Man2, true) 
+        cineSequencer:AddCineEvent(move7Man2, true) 
+        cineSequencer:AddCineEvent(wait11, true) 
+        cineSequencer:AddCineEvent(dialogue10, true) 
+
+        cineSequencer:AddCineEvent(move4Man1, true) 
+        cineSequencer:AddCineEvent(move8Man2, true) 
+        cineSequencer:AddCineEvent(dialogue11, true) 
+
+        cineSequencer:AddCineEvent(move9Man2, false) 
+        cineSequencer:AddCineEvent(move5Man1, false) 
+        cineSequencer:AddCineEvent(dialogue12, true) 
+
+        cineSequencer:AddCineEvent(move6Man1, false) 
+        cineSequencer:AddCineEvent(move10Man2, false)
+        cineSequencer:AddCineEvent(cameraPan5, false)
+        cineSequencer:AddCineEvent(wait12, true) 
+        cineSequencer:AddCineEvent(move11Man2, false)
+        cineSequencer:AddCineEvent(move11Boy, false)
+        cineSequencer:AddCineEvent(wait13, true) 
+        cineSequencer:AddCineEvent(move12Boy, false)
+        cineSequencer:AddCineEvent(wait14, true) 
+        cineSequencer:AddCineEvent(move9Player, true)
+        cineSequencer:AddCineEvent(move10Player, true)
+        cineSequencer:AddCineEvent(dialogue13, true) 
+
+        cineSequencer:AddCineEvent(move11Player, true)
+        cineSequencer:AddCineEvent(wait15, true) 
+        cineSequencer:AddCineEvent(dialogue14, true)
+        cineSequencer:AddCineEvent(move12Player, true) 
+        cineSequencer:AddCineEvent(dialogue15, true)
+        cineSequencer:AddCineEvent(move14Player, false)
+        cineSequencer:AddCineEvent(remove1, false)
+        cineSequencer:AddCineEvent(remove2, false)
+        cineSequencer:AddCineEvent(remove3, false)
+        cineSequencer:AddCineEvent(fadeToBlack, true)
+        cineSequencer:AddCineEvent(fadeInBackground, false)
+        cineSequencer:AddCineEvent(fadeInLogo, true)
+        cineSequencer:AddCineEvent(wait17, true)
+        cineSequencer:AddCineEvent(dialogue16, true)
+        cineSequencer:AddCineEvent(wait18, true)
+
+
+    end
+end

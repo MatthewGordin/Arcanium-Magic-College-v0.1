@@ -1,0 +1,83 @@
+/**********************************************************
+  >> COMMENTS CURRENT INCOMPLETE AND WIP! <<
+
+  Class for any Game Audio (Sound Effects / Music)
+  Inherits from Audio to enable audio output
+
+  Initialize the Min / Max Volume to 1 (100%)
+  Simply a superclass with general fields for audio:
+  * file        - File used to store the PATH
+  * minVolume   - Number representing the Start Volume
+**********************************************************/
+use Libraries.Sound.Audio
+use Libraries.System.File
+
+class GameSound is Audio
+    text name = ""
+    text audioType = ""
+    File file
+    number minVolume = 1
+
+    /**********************************************************
+       Default actions of Sound Effects
+    **********************************************************/
+
+    action LoadAudio
+        Load(file)
+    end
+
+    action PlayAudio(number systemVolume, boolean enableLooping)
+        SetVolume(GetMinVolume() * systemVolume)
+        if enableLooping = true
+            EnableLooping()
+        end
+        Play()
+    end
+
+    action StopAudio
+        if IsPlaying()
+            Stop()
+        end
+    end
+
+    /**********************************************************
+             Getters & Setters for private variables            
+    **********************************************************/
+    
+    action SetName (text newName)
+        name = newName
+    end
+
+    action GetName() returns text
+        return name
+    end
+    
+    action SetType (text newType)
+        audioType = newType
+    end
+
+    action GetType() returns text
+        return audioType
+    end
+
+    action SetFilePath (text newPath) returns boolean
+        file:SetPath(newPath)
+        if (file:Exists())
+            return true
+        else
+            return false
+        end
+    end
+
+    action GetFile returns File
+        return file
+    end
+    
+    action SetMinVolume (number newMin)
+        minVolume = newMin
+    end
+
+    action GetMinVolume() returns number
+        return minVolume
+    end
+end

@@ -1,0 +1,17 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+
+class InitiateTitleScreen is Behavior
+    boolean finished = false
+    GameStateManager manager
+    action Run()
+        Main main = cast(Main, manager:GetGame())
+        main:TitleScreenTest()
+        finished = true
+    end
+
+    action IsFinished() returns boolean
+        return finished
+    end
+end

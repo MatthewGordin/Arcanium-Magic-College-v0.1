@@ -1,0 +1,148 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Game
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Label
+use Libraries.Interface.Controls.Button
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.GameStateManager
+
+class DisplayLogBehavior is Behavior
+    
+    GameStateManager manager
+    Game game
+    Array<Item2D> removalArray
+    Array<text> log
+    Array<Button> buttons
+    Array<Label> labels
+    Drawable displayBox
+    Color color
+    boolean finished = false
+    Camera camera = undefined
+    
+    action Run(BehaviorEvent event)
+        Main main = cast(Main, manager:GetGame())
+        main:lockMovement = true
+
+        if log:GetSize() = 0
+            finished = true
+        end
+
+        camera = manager:GetGame():GetCamera2D()
+        displayBox:Load("Assets/Sprites/dialogue-box.png")
+        displayBox:Scale(3.53)
+        displayBox:SetPosition(cast(integer, camera:GetPosition():GetX()-camera:GetWidth()/2)-110, cast(integer, camera:GetPosition():GetY()-camera:GetHeight()/2)-30)
+        game:Add(displayBox)
+
+        integer counter = 0
+        
+        repeat while counter < log:GetSize()
+            Color color
+
+            Label label
+            label:SetText(log:Get(counter))
+            label:SetPosition(-1000, -1000)
+            label:SetHorizontalMargins(15)
+            label:SetFontSize(36)
+            label:SetMaximumWidth(camera:GetWidth() - 50)
+            labels:Add(label)
+            displayBox:Add(label)
+
+            Button button
+            NextLogBehavior behavior
+            behavior:SetLabels(labels)
+            behavior:SetButtons(buttons)
+            behavior:SetCurrentIndex(counter)
+            behavior:SetLogBehavior(me)
+            behavior:SetDisplayBox(displayBox)
+            behavior:SetGame(game)
+            button:SetBehavior(behavior)
+            button:SetName(log:Get(counter))
+            button:SetPosition(-1000, -1000)
+            buttons:Add(button)
+            game:Add(button)
+            
+            counter = counter + 1
+        end
+
+        if buttons:GetSize() > 0
+            game:SetFocus(buttons:Get(0))
+        end
+
+        if labels:GetSize() > 0
+            labels:Get(0):SetPosition(135, 140)
+        end
+    end
+    
+    action Dispose
+        Main main = cast(Main, game)
+        main:lockMovement = false
+
+        integer counter = 0
+
+        repeat while counter < buttons:GetSize()
+            removalArray:Add(buttons:Get(counter))
+            removalArray:Add(labels:Get(counter))
+            counter = counter + 1
+        end
+
+        removalArray:Add(displayBox)
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetFinished(boolean bool)
+        finished = bool
+    end
+    
+    action SetGame(Game newGame)
+        game = newGame
+    end
+    
+    action SetRemovalArray(Array<Item2D> array)
+        removalArray = array
+    end
+
+    action SetCamera(Camera gameCamera)
+        camera = gameCamera
+    end
+
+    action SetLog(Array<text> newLog)
+//        log = newLog
+        integer counter = 0
+
+        repeat while counter < newLog:GetSize()
+            log:Add(newLog:Get(counter))
+
+            counter = counter + 1
+        end
+    end
+
+    action GetGame() returns Game
+        return game
+    end
+
+    action GetRemovalArray() returns Array<Item2D>
+        return removalArray
+    end
+
+    action GetCamera() returns Camera
+        return camera
+    end
+
+    action GetLog() returns Array<text>
+        return log
+    end
+
+    action DuplicateDisplayLog(DisplayLogBehavior target)
+        SetGame(target:GetGame())
+        SetLog(target:GetLog())
+        SetRemovalArray(target:GetRemovalArray())
+        SetCamera(target:GetCamera())
+    end
+end

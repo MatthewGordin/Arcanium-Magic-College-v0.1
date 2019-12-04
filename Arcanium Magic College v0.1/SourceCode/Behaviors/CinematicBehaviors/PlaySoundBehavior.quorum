@@ -1,0 +1,40 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Sound.Audio
+use Libraries.System.File
+
+class PlaySoundBehavior is Behavior
+    
+    number maxTime = 0
+    number currTime = 0
+
+    boolean finished = false
+
+    GameSound sound
+    File file
+    number volume = 1
+    
+
+    action Run (BehaviorEvent event)
+        sound:PlayAudio(volume, false)
+        finished = true
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+    
+    action SetSound(text filePath)
+        sound:SetFilePath(filePath)
+        sound:LoadAudio()
+    end
+
+    action SetVolume(number vol)
+        volume = vol
+    end
+
+    action Dispose()
+
+    end
+
+end

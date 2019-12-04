@@ -1,0 +1,179 @@
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Events.FocusListener
+use Libraries.Interface.Events.FocusEvent
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Containers.Array
+use Libraries.Interface.AccessibilityManager
+use Libraries.Game.Graphics.Label
+
+class MenuButton is Button, FocusListener
+// make MenuButton change focus when moused over
+    Game game
+    Array<Item2D> removalArray
+    Color color
+    Array<Drawable> indicators
+    Array<Item2D> targets
+    boolean horizontal = false
+    boolean noIndicator = true
+    number storedX = 0
+    number storedY = 0
+    boolean prettyButton = false
+    Drawable background
+    Label label
+
+    action Dispose
+        integer counter = 0
+
+        repeat while counter < indicators:GetSize()
+            removalArray:Add(indicators:Get(counter))   
+
+            counter = counter + 1
+        end
+
+        background:SetPosition(-1000, -1000)
+        label:SetPosition(-1000, -1000)
+
+        removalArray:Add(background)
+        removalArray:Add(label)
+    end
+
+    action SetPosition(number newX, number newY)
+        if prettyButton
+            storedX = newX
+            storedY = newY
+
+            if label:GetWidth() < 60
+                background:SetPosition(newX-30, newY-20)
+            else
+                background:SetPosition(newX-40, newY-20)
+            end
+            label:SetPosition(newX, newY)
+        else
+            parent:Button:SetPosition(newX, newY)
+        end
+    end
+
+    action GainedFocus(FocusEvent event)
+        parent:Button:GainedFocus(event)
+
+        integer counter = 0
+
+        repeat while counter < targets:GetSize()
+            if horizontal and targets:Get(counter) not= undefined
+                if prettyButton
+                    if label:GetWidth() < 60
+                        indicators:Get(counter):SetPosition(storedX - 55, storedY - 10)
+                    else
+                        indicators:Get(counter):SetPosition(storedX - 70, storedY - 10)
+                    end
+                else
+                    indicators:Get(counter):SetPosition(targets:Get(counter):GetX() - 30, targets:Get(counter):GetY())
+                end
+            elseif targets:Get(counter) not= undefined
+                if prettyButton
+                    indicators:Get(counter):SetPosition(storedX + targets:Get(counter):GetWidth()/2 + 5, storedY + targets:Get(counter):GetHeight() + 60)
+                else
+                    indicators:Get(counter):SetPosition(targets:Get(counter):GetX() + targets:Get(counter):GetWidth()/2 + 5, targets:Get(counter):GetY() + targets:Get(counter):GetHeight() + 60)
+                end
+            end
+
+            counter = counter + 1
+        end
+
+        noIndicator = false
+    end
+
+    action LostFocus(FocusEvent event)
+        parent:Button:LostFocus(event)
+
+        integer counter = 0
+
+        repeat while counter < indicators:GetSize()
+            indicators:Get(counter):SetPosition(-1000, -1000)
+
+            counter = counter + 1
+        end
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetRemovalArray(Array<Item2D> array)
+        removalArray = array
+    end
+
+    action SetTarget(Item2D item)
+        targets:Add(item)
+
+        if prettyButton
+            storedX = me:GetX()
+            storedY = me:GetY()
+
+            background:Load("Assets/Sprites/button-background.png")
+//            background:Scale(0.5, 0.8)
+            game:Add(background)
+
+            label:SetText(me:GetName())
+            label:SetFontSize(20)
+            label:SetFontColor(color:White())
+            game:Add(label)
+
+            if label:GetWidth() < 60
+                background:Scale(0.4, 0.8)
+                background:SetPosition(storedX-30, storedY-20)
+            else
+                background:Scale(0.65, 0.8)
+                background:SetPosition(storedX-40, storedY-20)
+            end
+
+            label:SetPosition(storedX, storedY)
+
+            parent:Button:SetPosition(-1000, -1000)
+        end
+
+        Drawable indicator
+        if horizontal
+            indicator:Load("Assets/Sprites/selection-horizontal.png")
+            indicator:Scale(1.2)
+        else
+            indicator:Load("Assets/Sprites/selection-vertical.png")
+            indicator:Scale(1.2)
+        end
+        indicator:SetPosition(-1000, -1000)
+        game:Add(indicator)
+        indicators:Add(indicator)
+    end
+
+    action SetTargets(Array<Item2D> items)
+        targets = items
+
+        integer counter = 0
+
+        repeat while counter < targets:GetSize()
+            Drawable indicator
+            if horizontal
+                indicator:Load("Assets/Sprites/selection-horizontal.png")
+                indicator:Scale(1.2)
+            else
+                indicator:Load("Assets/Sprites/selection-vertical.png")
+                indicator:Scale(1.2)
+            end
+            indicator:SetPosition(-1000, -1000)
+            game:Add(indicator)
+            indicators:Add(indicator)
+
+            counter = counter + 1
+        end
+    end
+
+    action SetHorizontal(boolean bool)
+        horizontal = bool
+    end
+
+    action SetPretty(boolean bool)
+        prettyButton = bool
+    end
+end

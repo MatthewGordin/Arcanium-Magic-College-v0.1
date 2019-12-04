@@ -1,0 +1,62 @@
+
+water.png
+size: 256,64
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Water frame 1
+  rotate: false
+  xy: 105, 36
+  size: 29, 26
+  orig: 29, 26
+  offset: 0, 0
+  index: -1
+Water frame 2
+  rotate: false
+  xy: 35, 2
+  size: 30, 29
+  orig: 30, 29
+  offset: 0, 0
+  index: -1
+Water frame 3
+  rotate: false
+  xy: 2, 2
+  size: 31, 29
+  orig: 31, 29
+  offset: 0, 0
+  index: -1
+Water frame 4
+  rotate: false
+  xy: 2, 33
+  size: 35, 29
+  orig: 35, 29
+  offset: 0, 0
+  index: -1
+Water frame 5
+  rotate: false
+  xy: 67, 2
+  size: 29, 32
+  orig: 29, 32
+  offset: 0, 0
+  index: -1
+Water frame 6
+  rotate: false
+  xy: 73, 37
+  size: 30, 25
+  orig: 30, 25
+  offset: 0, 0
+  index: -1
+Water frame 7
+  rotate: false
+  xy: 39, 38
+  size: 32, 24
+  orig: 32, 24
+  offset: 0, 0
+  index: -1
+Water frame 8
+  rotate: false
+  xy: 136, 42
+  size: 34, 20
+  orig: 34, 20
+  offset: 0, 0
+  index: -1

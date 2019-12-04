@@ -1,0 +1,13 @@
+{
+    "interactables": [
+        {
+            "name": "Interactable River Crossing",
+            "type": "dialogue",
+            "required": "true",
+            "dialogue": [
+               "There seems to be no way to cross the river.",
+               "You use Rock Blast to create a path across."
+            ]
+        }
+    ]
+}

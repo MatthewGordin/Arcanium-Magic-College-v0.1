@@ -1,0 +1,119 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class Introduction is Cinematic
+    
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+    Map tempMap
+    MapList maps
+    InteriorHouse interiorHouseScene
+
+    //NPCs
+    Animation player
+    text playerImgSheet = "Hero"
+
+    //Dialogue
+    Array<text> dialogue1Text
+    Array<text> dialogue2Text
+    Array<text> dialogue3Text
+
+    //PostProcessing
+    Drawable rectangle1
+    Color blue
+
+    //Cinematic Behaviors
+    WaitForBehavior     wait1
+    WaitForBehavior     wait2      
+    PanCameraBehavior   cameraPan1
+    PanCameraBehavior   cameraPan2
+    PanCameraBehavior   cameraPan3
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    MoveNPCBehavior     moveTest1
+    MoveNPCBehavior     moveTest2
+    MoveNPCBehavior     moveTest3
+    RemoveObjectBehavior remove1
+    ColorFadeBehavior   colorFade1
+    ColorFadeBehavior   colorFade2
+    MapTransitionBehavior transition1
+
+    public action Run ()
+        
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+ 
+    private action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+        player = main:GetPlayer():playerSprite
+
+        //Camera
+        main:GetCamera2D():SetPosition(400,-200,0)
+
+        //Player NPC
+        player:sprite1:SetPosition(400,400)
+        player:sprite3:SetPosition(400,400)
+
+        //Dialogue1
+        dialogue1Text:Add("?: Awaken...")
+        dialogue2Text:Add("Moments later, like waking up from a daydream, you step forth.")
+        dialogue2Text:Add("Six glowing orbs encircle you, and beckon for your touch.")
+        dialogue2Text:Add("WASD to move. SPACE to interact with objects.")
+
+        //PostProcessing
+        blue:SetColor(0.4,0,0,0.5)
+        rectangle1:LoadFilledRectangle(800,800,blue)
+        main:Add(rectangle1)
+    end
+
+    private action BehaviorSetup()
+        wait1:              SetWaitDuration(0.3)
+        wait2:              SetWaitDuration(3)
+        cameraPan1:         SetCameraPan(0,70, 8.3)
+        cameraPan2:         SetCameraPan(25,0, 3.5)
+        cameraPan3:         SetCameraPan(0,30,6)
+        dialogue1:          SetGame(main)
+        dialogue1:          SetLog(dialogue1Text)
+        dialogue1:          SetRemovalArray(main:GetRemovalArray())
+        dialogue1:          SetCamera(main:GetCamera2D())
+        dialogue2:          SetGame(main)
+        dialogue2:          SetLog(dialogue2Text)
+        dialogue2:          SetRemovalArray(main:GetRemovalArray())
+        dialogue2:          SetCamera(main:GetCamera2D())
+        moveTest1:          SetAnimation(player, playerImgSheet)
+        moveTest1:          SetMoveDirection(0,-15,3.5)
+        moveTest1:          SetNPCCollidable(false)
+        moveTest2:          SetAnimation(player, playerImgSheet)
+        moveTest2:          SetNPCCollidable(true)
+
+
+        colorFade1:         SetFade(0,0,0,0.25,4)
+        colorFade1:         SetDrawable(rectangle1)
+
+    end
+
+    private action EnqueueBehaviors()
+        //Adding Behaviors to Sequencer in Correct Order
+        cineSequencer:AddCineEvent(wait1, true)
+        cineSequencer:AddCineEvent(cameraPan1, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+        cineSequencer:AddCineEvent(moveTest1, false)
+        cineSequencer:AddCineEvent(colorFade1, true)
+        cineSequencer:AddCineEvent(dialogue2, true)
+        cineSequencer:AddCineEvent(moveTest2, true)
+
+    end
+end

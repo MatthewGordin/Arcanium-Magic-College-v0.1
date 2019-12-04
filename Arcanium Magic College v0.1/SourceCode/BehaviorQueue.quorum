@@ -1,0 +1,60 @@
+use Libraries.Containers.Array
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class BehaviorQueue 
+
+    Array<Behavior> queue
+    Behavior currentBehavior
+    boolean shouldRun = true
+
+    action Update(number seconds)
+        if currentBehavior = undefined
+            return now
+        end
+
+        if queue:IsEmpty()
+            shouldRun = true
+        end
+
+        if currentBehavior:IsFinished()
+            NextBehavior()
+        else
+            currentBehavior:Update(seconds)
+        end
+    end
+
+    action AddBehavior(Behavior behavior)
+        queue:Add(behavior)
+        if shouldRun
+            NextBehavior()
+        end
+    end
+
+    private action NextBehavior
+        shouldRun = false
+        if currentBehavior not= undefined
+            currentBehavior:Dispose()
+        end
+
+        if queue:IsEmpty()
+            currentBehavior = undefined
+            shouldRun = true
+        else
+            currentBehavior = queue:RemoveFromFront()
+
+            BehaviorEvent event
+            currentBehavior:Run(event)
+        end
+    end
+
+    action StopBehaviors
+        if currentBehavior not= undefined
+            currentBehavior:Dispose()
+            currentBehavior = undefined
+        end
+        if not queue:IsEmpty()
+            queue:Empty()
+        end
+    end
+end

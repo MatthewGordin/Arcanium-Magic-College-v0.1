@@ -1,0 +1,419 @@
+use Libraries.Containers.Array
+use Libraries.Compute.Random
+use Libraries.Game.Game
+use Libraries.Interface.Item2D
+
+class AI
+
+    integer targetPosition = -1     //which combatant the attack will target
+    Game game
+    Array<Item2D> removalArray
+    BehaviorQueue behaviorQueue
+    CombatEnemyActionBehavior previousBehavior
+
+    /*Determine what attack and enemy should use along with their target,
+    then apply the attack*/
+    action AI(integer actorPosition, Array<Combatant> combatants)
+        Enemy actor = cast(Enemy, combatants:Get(actorPosition))
+        text name = actor:GetName()
+        integer attackID = 0
+        targetPosition = FindHurtAllyPosition(combatants)
+
+        if (name = "Goblin")
+            attackID = Goblin(actor, combatants)
+        elseif (name = "Goblin Shaman")
+            attackID = GoblinShaman(actor, combatants)
+        elseif (name = "Wolf")
+            attackID = Wolf(actor, combatants)
+        elseif (name = "Orc")
+            attackID = Orc(actor, combatants)
+        elseif (name = "Slime")
+            attackID = Slime(actor, combatants)
+        end
+        
+        if (attackID / 1000000 = 9)
+            Spell enemySpell
+            enemySpell:FillSpell(attackID)
+
+            if ((enemySpell:GetCanHeal() and enemySpell:GetCanDamage()) or not enemySpell:GetCanHeal())
+                targetPosition = SelectTarget(actorPosition, enemySpell, combatants)
+            end
+
+            if (enemySpell:GetMultiTarget() and targetPosition not= 0)
+                Array<text> log
+                log:Add(actor:GetName() + " cast " + enemySpell:GetName() + "!")
+
+                DisplayLogBehavior updateMessage
+                updateMessage:SetGame(game)
+                updateMessage:SetLog(log)
+                updateMessage:SetRemovalArray(removalArray)
+                behaviorQueue:AddBehavior(updateMessage)
+
+                targetPosition = 1
+                repeat while (targetPosition < combatants:GetSize())
+                    if combatants:Get(targetPosition) not= undefined
+                        combatants:Get(targetPosition):ReceiveAttack(enemySpell, actor)
+                    end
+                    targetPosition = targetPosition + 1
+                end
+            else
+                combatants:Get(targetPosition):ReceiveAttack(enemySpell, actor)
+            end
+        else
+            Physical enemyPhysical
+            enemyPhysical:FillPhysical(attackID)
+
+            if (not enemyPhysical:GetCanHeal())
+                targetPosition = SelectTarget(actorPosition, enemyPhysical, combatants)
+            end
+
+            if (enemyPhysical:GetMultiTarget())
+                Array<text> log
+                log:Add(actor:GetName() + " used " + enemyPhysical:GetName() + "!")
+
+                DisplayLogBehavior updateMessage
+                updateMessage:SetGame(game)
+                updateMessage:SetLog(log)
+                updateMessage:SetRemovalArray(removalArray)
+                behaviorQueue:AddBehavior(updateMessage)
+
+                targetPosition = 1
+                repeat while (targetPosition < combatants:GetSize())
+                    if combatants:Get(targetPosition) not= undefined
+                        combatants:Get(targetPosition):ReceiveAttack(enemyPhysical, actor)
+                    end
+                    targetPosition = targetPosition + 1
+                end
+            else
+                combatants:Get(targetPosition):ReceiveAttack(enemyPhysical,actor)
+            end
+        end
+    end
+
+    /*Goblin can use Slash (8000001), Double Slash (8000011, 3 turn cooldown),
+    or Healing Potion (8000100, 1 use)*/
+    action Goblin(Enemy actor, Array<Combatant> combatants) returns integer        
+        integer attackID = 8000001
+        integer doubleSlashCooldown = actor:GetAttackCooldownsAtPosition(0)
+        Random random
+        integer r = random:RandomIntegerBetween(1, 100)
+
+        if (doubleSlashCooldown < 3)
+            actor:SetAttackCooldownsAtPosition(0, doubleSlashCooldown + 1)
+        end
+
+        if (targetPosition not= -1 and actor:GetItemUseCount() > 0)
+            if (r <= 70)
+                actor:SetItemUseCount(actor:GetItemUseCount() - 1)
+                attackID = 8000100
+            elseif (doubleSlashCooldown >= 3)
+                if (r <= 85)
+                    actor:SetAttackCooldownsAtPosition(0, 0)
+                    attackID = 8000011
+                else
+                    attackID = 8000001
+                end
+            else
+                attackID = 8000001
+            end
+        else
+            if (r <= 40 and doubleSlashCooldown >= 3)
+                actor:SetAttackCooldownsAtPosition(0, 0)
+                attackID = 8000011
+            else
+                attackID = 8000001
+            end
+        end
+
+        return attackID
+    end
+
+    /*Goblin shaman can use Air Slash (9000100), Heal (9000010, 3 turn cooldown), 
+    Dark Blast (9000001), Unholy Fire (9100001, 4 turn cooldown), 
+    or Holy Fury (9000011, 4 turn cooldown)*/
+    action GoblinShaman(Enemy actor, Array<Combatant> combatants) returns integer     
+        integer attackID = 9000100
+        integer healCooldown = actor:GetAttackCooldownsAtPosition(0)
+        integer unholyFireCooldown = actor:GetAttackCooldownsAtPosition(1)
+        integer holyFuryCooldown = actor:GetAttackCooldownsAtPosition(2)
+        Random random
+        integer r = random:RandomIntegerBetween(1, 100)
+
+        if (healCooldown < 3)
+            actor:SetAttackCooldownsAtPosition(0, healCooldown + 1)
+        end
+
+        if (unholyFireCooldown < 4)
+            actor:SetAttackCooldownsAtPosition(1, unholyFireCooldown + 1)
+        end
+
+        if (holyFuryCooldown < 4)
+            actor:SetAttackCooldownsAtPosition(2, holyFuryCooldown + 1)
+        end
+
+        if (targetPosition not= -1 and healCooldown >= 3)
+            if (r <= 80)
+                actor:SetAttackCooldownsAtPosition(0, 0)
+                attackID = 9000010
+            elseif (unholyFireCooldown >= 4)
+                if (r <= 85)
+                    actor:SetAttackCooldownsAtPosition(1, 0)
+                    attackID = 9100001
+                elseif (holyFuryCooldown >= 4)
+                    if (r <= 90)
+                        actor:SetAttackCooldownsAtPosition(2, 0)
+                        attackID = 9000011
+                    elseif (r <= 95)
+                        attackID = 9000001
+                    else
+                        attackID = 9000100
+                    end
+                elseif (r <= 95)
+                    attackID = 9000001
+                else
+                    attackID = 9000100
+                end
+            elseif (holyFuryCooldown >= 4)
+                if (r <= 90)
+                    actor:SetAttackCooldownsAtPosition(2, 0)
+                    attackID = 9000011
+                elseif (r <= 95)
+                    attackID = 9000001
+                else
+                    attackID = 9000100
+                end
+            elseif (r <= 90)
+                attackID = 9000001
+            else
+                attackID = 9000100
+            end
+        elseif (unholyFireCooldown >= 4)
+            if (r <= 35)
+                actor:SetAttackCooldownsAtPosition(1, 0)
+                attackID = 9100001
+            elseif (holyFuryCooldown >= 4)
+                if (r <= 70)
+                    actor:SetAttackCooldownsAtPosition(2, 0)
+                    attackID = 9000011
+                elseif (r <= 90)
+                    attackID = 9000001
+                else
+                    attackID = 9000100
+                end
+            elseif (r <= 70)
+                attackID = 9000001
+            else
+                attackID = 9000100
+            end
+        elseif (holyFuryCooldown >= 4)
+            if (r <= 50)
+                actor:SetAttackCooldownsAtPosition(2, 0)
+                attackID = 9000011
+            elseif (r <= 75)
+                attackID = 9000001
+            else
+                attackID = 9000100
+            end
+        elseif (r <= 50)
+            attackID = 9000001
+        else
+            attackID = 9000100
+        end
+
+        return attackID   
+    end
+
+    /*Wolf can use Bite (8000000), Lick Wounds (8000101, 3 turn cooldown), 
+    Intimidate (8000110), or Maim (8000111, 4 turn cooldown) */
+    action Wolf(Enemy actor, Array<Combatant> combatants) returns integer        
+        integer attackID = 8000000
+        integer lickWoundsCooldown = actor:GetAttackCooldownsAtPosition(0)
+        integer maimCooldown = actor:GetAttackCooldownsAtPosition(1)
+        Random random
+        integer r = random:RandomIntegerBetween(1, 100)
+
+        if (lickWoundsCooldown < 3)
+            actor:SetAttackCooldownsAtPosition(0, lickWoundsCooldown + 1)
+        end
+
+        if (maimCooldown < 4)
+            actor:SetAttackCooldownsAtPosition(1, maimCooldown + 1)
+        end
+
+        if (targetPosition not= -1 and lickWoundsCooldown >= 3)
+            if (r <= 60)
+                attackID = 8000101
+                actor:SetAttackCooldownsAtPosition(0, 0)
+            elseif (maimCooldown >= 4)
+                if (r <= 80)
+                    actor:SetAttackCooldownsAtPosition(1, 0)
+                    attackID = 8000111
+                elseif (r <= 90)
+                    attackID = 8000110
+                else
+                    attackID = 8000000
+                end
+            elseif (r <= 70)
+                attackID = 8000110
+            else
+                attackID = 8000000
+            end
+        elseif (maimCooldown >= 4)
+            if (r <= 40)
+                actor:SetAttackCooldownsAtPosition(1, 0)
+                attackID = 8000111
+            elseif (r <= 60)
+                attackID = 8000110
+            else
+                attackID = 8000000
+            end
+        elseif (r <= 20)
+            attackID = 8000110
+        else
+            attackID = 8000000
+        end
+
+        return attackID
+    end
+
+    /*Orc can use Cleave (8000010), Healing Potion (8000100, 2 uses), 
+    Encourage (8001000, 3 turn cooldown), Berserk Charge (8001001, 4 turn cooldown)*/
+    action Orc(Enemy actor, Array<Combatant> combatants) returns integer
+        integer attackID = 8000010
+        integer encourageCooldown = actor:GetAttackCooldownsAtPosition(0)
+        integer berserkChargeCooldown = actor:GetAttackCooldownsAtPosition(1)
+        Random random
+        integer r = random:RandomIntegerBetween(1, 100)
+
+        if (encourageCooldown < 3)
+            actor:SetAttackCooldownsAtPosition(0, encourageCooldown + 1)
+        end
+
+        if (berserkChargeCooldown < 4)
+            actor:SetAttackCooldownsAtPosition(1, berserkChargeCooldown + 1)
+        end
+
+        if (targetPosition not= -1 and actor:GetItemUseCount() > 0)
+            if (r <= 70)
+                actor:SetItemUseCount(actor:GetItemUseCount() - 1)
+                attackID = 8000100
+            elseif (encourageCooldown >= 3)
+                if (r <= 80)
+                    actor:SetAttackCooldownsAtPosition(0, 0)
+                    attackID = 8001000
+                elseif (berserkChargeCooldown >= 4)
+                    if (r <= 95)
+                        actor:SetAttackCooldownsAtPosition(1, 0)
+                        attackID = 8001001
+                    else
+                        attackID = 8000010
+                    end
+                else
+                   attackID = 8000010
+                end
+            elseif (berserkChargeCooldown >= 4)
+                if (r <= 90)
+                    actor:SetAttackCooldownsAtPosition(1, 0)
+                    attackID = 8001001
+                else
+                    attackID = 8000010
+                end
+            else
+                attackID = 8000010
+            end
+        elseif (encourageCooldown >= 3)
+            if (r <= 50)
+                actor:SetAttackCooldownsAtPosition(0, 0)
+                attackID = 8001000
+            elseif (berserkChargeCooldown >= 4)
+                if ( r <= 60)
+                    actor:SetAttackCooldownsAtPosition(1, 0)
+                    attackID = 8001001
+                else
+                    attackID = 8000010
+                end
+            else
+                attackID = 8000010
+            end
+        elseif (berserkChargeCooldown >= 4)
+            if (r <= 50)
+                actor:SetAttackCooldownsAtPosition(1, 0)
+                attackID = 8001001
+            else
+                attackID = 8000010
+            end
+        else
+            attackID = 8000010
+        end
+ 
+        return attackID
+    end
+
+    /*Slime can only use lunge (8001010)*/
+    action Slime(Enemy actor, Array<Combatant> combatants) returns integer
+        return 8001010
+    end
+
+    /*Check if one of the enemies left is below 50% HP and not targetted for 
+    healing already, if so return their position, otherwise return  -1*/
+    action FindHurtAllyPosition(Array<Combatant> combatants) returns integer
+        integer allyPosition = -1
+        integer i = 1
+        repeat while (i < combatants:GetSize() and allyPosition = -1)
+            if (combatants:Get(i) not= undefined)
+                Enemy ally = cast(Enemy, combatants:Get(i))
+                if (not ally:GetTargetForHeal())
+                    number percent = (cast(number, ally:GetCurrentHP())
+                     / (cast(number, ally:GetMaxHP()))) * 100
+                    if (percent <= 50)
+                        found = true
+                        allyPosition = i
+                        ally:SetTargetForHeal(true)
+                    end
+                end
+            end
+            i = i + 1
+        end
+
+        return allyPosition
+    end
+
+    /*Choose a target based off of the attack dealing damage, healing, or a
+    combination of the two*/
+    action SelectTarget(integer actorPosition, Attack enemyAttack, 
+     Array<Combatant> combatants) returns integer
+        integer target = 0
+        boolean heals = enemyAttack:GetCanHeal()
+        boolean damages = enemyAttack:GetCanDamage()
+
+        if ((heals and damages) or (not heals and damages)) //leeching/damaging attacks target player
+            target = 0
+        elseif (not heals and not damages) //buff attacks target allies
+            Random random
+            integer r = random:RandomIntegerBetween(1, combatants:GetSize() - 1)
+            if (combatants:Get(r) not= undefined)
+                target = r
+            else
+                target = actorPosition
+            end
+        end
+
+        return target
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newQueue)
+        behaviorQueue = newQueue
+    end
+    
+    action SetPreviousBehavior(CombatEnemyActionBehavior newBehavior)
+        previousBehavior = newBehavior
+    end
+end

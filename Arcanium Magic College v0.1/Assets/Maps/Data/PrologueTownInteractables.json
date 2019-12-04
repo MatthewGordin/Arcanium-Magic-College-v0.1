@@ -1,0 +1,74 @@
+{
+  "interactables": [
+    {
+      "name": "Interactable Door",
+      "type": "dialogue",
+      "dialogue": [
+        "It's locked."
+      ]
+    },
+    {
+      "name": "Interactable Door 1",
+      "type": "dialogue",
+      "dialogue": [
+        "It seems like everyone in town locks their doors."
+      ]
+    },
+    {
+      "name": "Interactable Door 2",
+      "type": "dialogue",
+      "dialogue": [
+        "This shed is locked."
+      ]
+    },
+    {
+      "name": "Interactable Door 3",
+      "type": "dialogue",
+      "dialogue": [
+        "It's locked."
+      ]
+    },
+    {
+      "name": "Interactable Door 4",
+      "type": "dialogue",
+      "dialogue": [
+        "This is the town inn. Not many travelers stay here, since it's a quiet town."
+      ]
+    },
+    {
+      "name": "Interactable Fountain",
+      "type": "dialogue",
+      "dialogue": [
+        "Birds gather on this fountain to bathe sometimes. You have a habit of chasing them away when they group up."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 1",
+      "type": "dialogue",
+      "dialogue": [
+        "You cannot make out any letters on the gravestone, so you cannot tell who died."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 2",
+      "type": "dialogue",
+      "dialogue": [
+        "There's a bouquet of fresh flowers next to the gravestone."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 3",
+      "type": "dialogue",
+      "dialogue": [
+        "You pay your respects."
+      ]
+    },
+    {
+      "name": "Interactable House Door",
+      "type": "dialogue",
+      "dialogue": [
+        "This is your house. You've lived here for as long as you can remember."
+      ]
+    }
+  ]
+}

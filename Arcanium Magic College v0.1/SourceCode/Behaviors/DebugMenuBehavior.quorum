@@ -1,0 +1,48 @@
+/* 
+    Based on MapTransitionBehavior 
+    Call using SetMap(current map, current map name, transition map name, player)
+
+    Uses InitializeMap, LoadAboveLayer, InitializeInteracctables, InitializePlayer from MAIN
+*/
+
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+
+class DebugMenuBehavior is Behavior
+    GameStateManager manager
+    Map currentMap
+    text currentMapName = ""
+    Player sprite
+
+    text newMapName = ""
+
+    action Run(BehaviorEvent event)
+        Main main = cast(Main, manager:GetGame())
+
+        main:InitializeMap(currentMap, currentMapName)
+        main:InitializeInteractables(currentMap, currentMapName)
+        main:LoadAboveLayer(currentMap, currentMapName)
+        
+        main:InitializePlayer(sprite)  
+        
+        output "------------------------------------"
+        
+        output "DEBUG MENU: <" + currentMapName + "> map loaded"
+        
+        MapTransitionBehavior transition
+        transition:SetTransition(currentMap, newMapName)
+        
+        output "------------------------------------"
+    end
+
+    action SetMap(Map map, text name, text transName, Player player)
+        currentMap = map
+        currentMapName = name
+        sprite = player
+
+        newMapName = transName
+    end
+end

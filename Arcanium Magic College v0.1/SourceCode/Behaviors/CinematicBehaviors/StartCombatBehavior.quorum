@@ -1,0 +1,22 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+use Libraries.Containers.Array
+
+class StartCombatBehavior is Behavior
+    
+    boolean finished = false
+    GameStateManager manager 
+    Main main
+
+    Array<text> enemies
+
+    action Run (BehaviorEvent event)
+        main = cast(Main, manager:GetGame())
+        main:CombatTest(enemies)
+    end
+
+    action SetEnemies(Array<text> enemyList)
+        enemies = enemyList
+    end
+end

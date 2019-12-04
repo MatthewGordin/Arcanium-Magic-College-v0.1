@@ -1,0 +1,10 @@
+{
+    "interactables": [ {
+        "name": "Interactable Campfire",
+        "type": "dialogue",
+        "dialogue": [
+            "The embers in the campfire glow softly.",
+            "The campfire seems to have been in use recently."
+        ]
+    } ]
+}

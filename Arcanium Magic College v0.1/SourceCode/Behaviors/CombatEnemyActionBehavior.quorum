@@ -1,0 +1,105 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Game
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Camera
+
+class CombatEnemyActionBehavior is Behavior
+
+    Game game
+    Array<Item2D> removalArray
+    BehaviorQueue behaviorQueue
+    Camera camera = undefined
+    Array<Combatant> combatants
+    integer enemyIndex = 0
+    boolean finished = false
+    CombatEnemyTurnBehavior previousBehavior
+
+    action Run(BehaviorEvent event)
+        if combatants:Get(enemyIndex) not= undefined
+            
+            text cannotMoveEffect = ""
+            Array<Status> statuses = combatants:Get(enemyIndex):GetStatuses()
+            integer counter = 0           
+
+            repeat while counter < statuses:GetSize()
+                if statuses:Get(counter):GetName() = "Frozen"
+                    cannotMoveEffect = "Frozen"
+                elseif statuses:Get(counter):GetName() = "Stun"
+                    cannotMoveEffect = "Stunned"
+                end
+
+                counter = counter + 1
+            end
+
+            if cannotMoveEffect = ""
+                Enemy enemy = cast(Enemy, combatants:Get(enemyIndex))
+
+                AI enemyAI
+                enemyAI:SetGame(game)
+                enemyAI:SetRemovalArray(removalArray)
+                enemyAI:SetBehaviorQueue(behaviorQueue)
+                enemyAI:SetPreviousBehavior(me)
+
+                enemyAI:AI(enemyIndex, combatants)
+            else
+                Array<text> log
+                log:Add(combatants:Get(enemyIndex):GetName() + " is " 
+                 + cannotMoveEffect + " and cannot move!")
+
+                DisplayLogBehavior updateMessage
+                updateMessage:SetGame(game)
+                updateMessage:SetLog(log)
+                updateMessage:SetRemovalArray(removalArray)
+                updateMessage:SetCamera(camera)
+                behaviorQueue:AddBehavior(updateMessage)
+            end
+        end
+
+        Dispose()
+        finished = true
+    end
+
+    action Dispose
+        if enemyIndex = combatants:GetSize() - 1
+            previousBehavior:SetFinished(true)
+        end
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetFinished(boolean newBoolean)
+        finished = newBoolean
+    end
+
+    action SetPreviousBehavior(CombatEnemyTurnBehavior newBehavior)
+        previousBehavior = newBehavior
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newQueue)
+        behaviorQueue = newQueue
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action SetCombatants(Array<Combatant> newArray)
+        combatants = newArray
+    end
+
+    action SetEnemyIndex(integer newIndex)
+        enemyIndex = newIndex
+    end
+end

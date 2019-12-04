@@ -1,0 +1,19 @@
+{
+    "interactables": [
+        {
+            "name": "Axe Interactable",
+            "type": "dialogue",
+            "dialogue": [
+               "The metal on the axe is nearly flawless aside from the few chips on the edges."
+            ]
+        },
+        {
+            "name": "Shield Interactable",
+            "type": "dialogue",
+            "dialogue": [
+                "Dents and scratches are scattered across the wooden shield.",
+                "The shield looks different from the ones crafted in the village."
+            ]
+        }
+    ]
+}

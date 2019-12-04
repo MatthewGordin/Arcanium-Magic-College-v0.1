@@ -1,0 +1,172 @@
+/**********************************************************
+  >> COMMENTS CURRENT INCOMPLETE AND WIP! <<
+
+  Class for maangeing ALL Game Audio
+
+  Has a PUBLIC list of GAMESOUNDs
+  * AddAudio to add a new sound to the list
+    - Pass NAME, FILETYPE, AUDIOTYPE
+    - (<file_name>, <file_extension>, "effect"/"music")
+
+  Current Problems / Missing Features
+  * Doesn't check for redundancy
+  * Doesn't have a specific return for sound
+  * Currently, very manual 
+**********************************************************/
+use Libraries.Sound.Audio
+use Libraries.Containers.Array
+
+class GameAudioManager
+    public Array<GameSound> audioList
+    number systemEffectVolume = 1.0
+    number systemMusicVolume = 1.0
+
+    action AddAudio (text name, text type, text sound)
+        if Has(name)
+            output "Error: Duplicate Audio"
+        else
+            GameSound audio
+            boolean legalFilePath = true
+            if sound = "effect"
+                if type = "wav"
+                    legalFilePath = audio:SetFilePath("Assets\Audio\Effects\" + name + ".wav")
+                elseif type = "ogg"
+                    legalFilePath = audio:SetFilePath("Assets\Audio\Effects\" + name + ".ogg")
+                end
+
+                if legalFilePath
+                    if type not= "wav" and type not= "ogg"
+                        output "Error: Incorrect Audio Type (~.wav / ~.ogg only)"
+                    else
+                        audio:LoadAudio()
+                        audio:SetMinVolume(0.5)
+                        audio:SetType("effect")
+                        audio:SetName(name)
+                    end
+                else
+                    output "Error: Illegal File Path"
+                end
+
+            elseif sound = "music"
+                Music music
+                if type = "wav"
+                    legalFilePath = music:SetFilePath("Assets\Audio\Music\" + name + ".wav")
+                elseif type = "ogg"
+                    legalFilePath = music:SetFilePath("Assets\Audio\Music\" + name + ".ogg")
+                end
+
+                if legalFilePath
+                    if type not= "wav" and type not= "ogg"
+                        output "Error: Incorrect Audio Type ('wav' / 'ogg' only)"
+                    else
+                        music:LoadAudio()
+                        /***********************************************************
+                                        START HARD CODED TEST PART
+                            This part is currently HARD-CODED but should be able
+                            to enter values to edit these, probably through some
+                            JSON file
+                        ***********************************************************/
+                        music:SetWillFade(true)
+                        music:SetFadeRate(0.000005)
+                        music:SetMinVolume(0.1)
+                        music:SetMaxVolume(0.5)
+                        audio = music
+                        /***********************************************************
+                                        END HARD CODED TEST PART
+                        ***********************************************************/
+                        audio:SetType("music")
+                        audio:SetName(name)
+                    end
+                else
+                    output "Error: Illegal File Path"
+                end
+            end
+            if legalFilePath
+                if sound not= "effect" and sound not= "music"
+                    output "Error: Incorrect GameSound Type ('effect' / 'music' only)"
+                else
+                    audioList:Add(audio)
+                end
+            end
+        end
+    end
+
+    action PlayAudio(text name)
+        if not Has(name)
+            output "Error: Cannot find Audio with name: " + name
+        else
+            integer i = 0
+            repeat audioList:GetSize() times
+                if audioList:Get(i):GetName() = name
+                    if audioList:Get(i):GetType() = "effect"
+                        audioList:Get(i):PlayAudio(systemEffectVolume, false)
+                    else
+                        audioList:Get(i):PlayAudio(systemMusicVolume, true)
+                    end
+                end
+                i = i + 1
+            end
+        end
+    end
+
+    action UpdateAudioList
+        integer i = 0
+        repeat audioList:GetSize() times
+            if audioList:Get(i):GetType() = "music"
+                Music temp = cast(Music, audioList:Get(i))
+                temp:UpdateAudio()
+            end
+            i = i + 1
+        end
+    end
+
+    action StopAudioList
+        integer i = 0
+        repeat audioList:GetSize() times
+            audioList:Get(i):StopAudio()
+            i = i + 1
+        end
+    end
+
+    action StopAudio(text audioName)
+        integer i = 0
+        repeat audioList:GetSize() times
+            if audioList:Get(i):GetName() = audioName
+                audioList:Get(i):StopAudio()
+            end
+            i = i + 1
+        end
+    end
+
+    action Has(text checkName) returns boolean
+        boolean truth = false
+        integer i = 0
+        repeat audioList:GetSize() times
+            if audioList:Get(i):GetName() = checkName
+                truth = true
+            end
+            i = i + 1
+        end
+        return truth
+    end
+
+    /**********************************************************
+             Getters & Setters for private variables            
+    **********************************************************/
+    
+    action SetSystemEffectVolume (number newVol)
+        systemEffectVolume = newVol
+    end
+
+    action GetSystemEffectVolume() returns number
+        return systemEffectVolume
+    end
+    
+    action SetSystemMusicVolume (number newVol)
+        systemMusicVolume = newVol
+    end
+
+    action GetSystemMusicVolume() returns number
+        return systemMusicVolume
+    end
+end

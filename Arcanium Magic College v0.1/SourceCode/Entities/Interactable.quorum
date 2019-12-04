@@ -1,0 +1,234 @@
+/**********************************************************
+  Class for any Interactable object (Items, NPC, etc)
+  Inherits from Drawable to be detected w/ collisions
+  Inherits from KeyboardListener to be interactable
+
+  Initialize with CreateInteractable(1, 2, 3, 4, 5)
+   1. TEXT (name) of this INTERACTABLE
+   2. TEXT (path) to the sprite / image
+       * Use "default" for for Black Box (32x32)
+       * Use "clear" for for Clear Box (32x32)
+   3. NUMBER of x coordinate
+       * Will be multipled by 32 for Tiled posiitoning
+   4. NUMBER of y coordinate
+       * Will be multipled by 32 for Tiled posiitoning
+   5. BOOLEAN determining physical collisions
+       * TRUE will be visible and tangible
+       * FALSE will be visible but intangible
+
+  EXAMPLE FORMATTING: 
+  * npc:CreateInteractable("NPC", "clear", 11, 5.5, true)
+
+  PROBLEMS / MISSING FEATURES OF INTERACTABLE CLASS
+  > DIALOGUE
+    * If PLAYER is colliding w/ 2+ INTERACTABLEs, then
+        each will display DIALOGUE (No priority / focus)
+    * DIALOGUE is simple OUTPUT (No GUI text box)
+    * No simple INITIALIZER (Manual input, including (X,Y))
+      # Could be fine with JSON file for input
+  > MAP TRANSITION
+    * Essentially uses the MAIN to remove / load maps
+    * Currently cannot load INTERACTABLES w/ maps
+
+  LIST OF BEHAVIORS ON INTERACTION / COLLISION
+  * Dialogue                        [ Completed ]
+  * Map Transition                  [In-Progress]
+  * Scripted Events                 [ - - - - - ]
+  * Battle                          [ - - - - - ]
+  * Getting an Item                 [ - - - - - ]
+  * Stores / Storage / Crafting     [ - - - - - ]
+**********************************************************/
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Game.Graphics.Color
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+
+class Interactable is Drawable, KeyboardListener
+
+    // List of variables for INTERACTABLE
+    text name = "NPC-01"                    // Name of Interactable	
+    boolean currentlyInteracting = false    // Check if Interacting
+    public boolean requiredCompleted = true        // used to check if the required object has been interacted with 
+        // set to true so that actions won't halt, but the data file will tell us to initialize any required items to false
+    Color color                             // Used for setting colors
+
+    // List of varibles for BEHAVIORs
+    public Behavior currentBehavior                // Behavior to trigger
+    text typeOfBehavior = ""                // Behavior type ID
+
+    MapList maps
+
+    // Initializer of an INTERACTABLE Object
+    action CreateInteractable(text setName, text spritePath, integer width, integer height, number setX, number setY, boolean physicsOn)
+        name = setName                      // Sets the name of the Interactable
+        SetName("interactable")             // Sets the name for Drawable
+
+        if width = 0
+            width = 32
+        end
+        if height = 0
+            height = 32
+        end
+
+        if spritePath = "default"
+            LoadFilledRectangle(width, height, color:Black())
+        elseif spritePath = "clear"
+            LoadFilledRectangle(width, height, color:Clear())
+        elseif spritePath not= "default" and spritePath not= "clear"
+            Load(spritePath)
+        end
+
+        SetX(setX)                     // x32 for Tiled positioning
+        SetY(setY)                     // x32 for Tiled positioning
+
+        if physicsOn
+            EnablePhysics(true)             // Tangible
+        else
+            SetCollidable(true)             // Intangible (still interactable)
+        end
+    end
+
+    // Returns the Name of INTERACTABLE Object
+    action GetInteractableName returns text
+        return name
+    end
+
+    // Returns whether the INTERACTABLE Object is interacting
+    action IsInteracting returns boolean
+        return currentlyInteracting
+    end
+	
+    // Switches the truth of currentlyInteracting
+    // * If BEHAVIOR is DIALOGUE, reset to beginning
+    action ToggleInteraction()
+        if currentlyInteracting
+            currentlyInteracting = false
+        else
+            currentlyInteracting = true
+            if typeOfBehavior = "transition"
+                output "( Press [SPACE] to travel to " + name + " )"
+            else
+                output "( Press [SPACE] to interact with " + name + " )"
+            end
+        end
+    end
+	
+    // When SPACE is pressed while currentlyInteracting, trigger behavior
+    action PressedKey(KeyboardEvent event)
+        if currentlyInteracting
+            if event:keyCode = event:SPACE
+                if currentBehavior is MapTransitionBehavior
+                    currentlyInteracting = false
+                    BehaviorEvent newEvent
+                    currentBehavior:Run(newEvent)
+                elseif currentBehavior is DisplayLogBehavior
+                    GameStateManager manager            // Used to get MAIN
+                    Main main = cast(Main, manager:GetGame())
+                    
+                    DisplayLogBehavior temp1
+                    DisplayLogBehavior temp2 = cast(DisplayLogBehavior, currentBehavior)
+
+                    temp1:DuplicateDisplayLog(temp2)
+
+                    main:behaviorQueue:AddBehavior(temp1)
+
+                    if (main:currentCollision not= undefined)
+                        main:currentDialogue = temp1
+                    end
+
+                    currentlyInteracting = false
+                elseif currentBehavior is InitiateCombatBehavior
+                    BehaviorEvent newEvent
+                    currentBehavior:Run(newEvent)
+                end
+            end
+        end
+    end
+
+    // Add behavior to INTERACTABLE, and set behavior TYPE
+    action SetInteractableBehavior(Behavior newBehavior, text behaviorType)
+        currentBehavior = newBehavior
+        typeOfBehavior = behaviorType
+        if typeOfBehavior = "combat"
+            InitiateCombatBehavior temp = cast(InitiateCombatBehavior, currentBehavior)
+            temp:SetInteractable(me)
+            currentBehavior = temp
+        end
+    end
+
+    // Creates a specific interactable behavior and then calls SetInteractableBehavior()
+    action CreateDialogueBehavior(InteractableData data)
+        GameStateManager manager            // Used to get MAIN
+        Main main = cast(Main, manager:GetGame())
+
+        DisplayLogBehavior dialogue1
+
+        dialogue1:          SetGame(main)
+        dialogue1:          SetLog(data:dialogue)
+        dialogue1:          SetRemovalArray(main:GetRemovalArray())
+        dialogue1:          SetCamera(main:GetCamera2D())
+
+        SetInteractableBehavior(dialogue1, "dialogue")
+    end
+
+    action CreateMapTransitionBehavior(Map oldMap, text newMapName, number newX, number newY, text musicName)
+        MapTransitionBehavior temp
+        temp:SetTransition(oldMap, newMapName)
+        if newMapName = maps:FOREST_PATH_1_MAP
+            newX = 795
+            newY = 320
+        end
+
+        // when going back to a completed map
+        if newMapName = maps:FOREST_PATH_1_MAP_COMPLETE
+            output "hewwo map complete"
+            newX = 245
+            newY = 600
+        end
+
+        if newMapName = maps:FOREST_PATH_2_MAP
+            newX = 245
+            newY = 0
+        end
+
+        // when going back to a completed map
+        if newMapName = maps:FOREST_PATH_2_MAP_COMPLETE
+            newX = 800
+            newY = 500
+        end
+
+        if newMapName = maps:FOREST_PATH_3_MAP
+            newX = 0    
+            newY = 500
+        end
+
+        // when going back to a completed map
+        if newMapName = maps:FOREST_PATH_3_MAP_COMPLETE
+            newX = 467
+            newY = 0
+        end
+
+        if newMapName = maps:FOREST_PATH_4_MAP
+            newX = 467
+            newY = 600
+        end
+        temp:SetCoordinates(newX, newY)
+        if (newMapName = maps:FOREST_CLEARING_MAP)
+            musicName = "zapsplat_nature_forest_ambience_summer_creek_close_by_loud_insects_cicada_australia_27785"
+        end
+        temp:SetMusic(musicName)
+        SetInteractableBehavior(temp, "transition")
+    end
+
+    action SetRequiredCompleted(boolean completed)
+        requiredCompleted = completed
+    end
+
+    action ResetInteraction()
+        currentlyInteracting = false
+    end
+end

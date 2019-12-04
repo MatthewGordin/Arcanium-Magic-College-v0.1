@@ -1,0 +1,88 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Drawable
+
+class ColorFadeBehavior is Behavior
+   
+    
+    number maxTime = 0
+    number currTime = 0
+
+    number red = 1
+    number green = 1
+    number blue = 1
+    number alpha = 1
+
+    Drawable drawable
+    
+    number currRed = 0
+    number currGreen = 0
+    number currBlue = 0
+    number currAlpha = 0
+
+    boolean finished = false
+    boolean addDrawable = false
+
+    Main main = undefined
+
+    action Run (BehaviorEvent event)
+        Color d
+        
+        if(addDrawable)
+            if(drawable:GetName() = "ArcaniumLogo")
+                drawable:SetPosition(main:GetCamera2D():GetPosition():GetX()-400, main:GetCamera2D():GetPosition():GetY()-150)
+            else
+                drawable:SetPosition(main:GetCamera2D():GetPosition():GetX()-400, main:GetCamera2D():GetPosition():GetY()-300)
+            end
+            main:Add(drawable)
+        end
+
+        currTime = 0
+        currRed = drawable:GetColor():GetRed()
+        currGreen = drawable:GetColor():GetGreen()
+        currBlue = drawable:GetColor():GetBlue()
+        currAlpha = drawable:GetColor():GetAlpha()
+    end
+
+    action Update(number seconds)
+
+        if(currTime <= maxTime)
+          currTime = currTime + seconds
+          number setRed = Lerp(currRed, red, currTime/maxTime)
+          number setGreen = Lerp(currGreen, green, currTime/maxTime)
+          number setBlue = Lerp(currBlue, blue, currTime/maxTime)
+          number setAlpha = Lerp(currAlpha, alpha, currTime/maxTime)
+
+          drawable:SetColor(setRed, setGreen, setBlue, setAlpha)
+        else
+            finished = true
+        end
+    end
+
+    action SetFade(number r, number g, number b, number a, number duration)
+        maxTime = duration
+        red = r
+        green = g
+        blue = b
+        alpha = a
+    end
+    
+    action SetDrawable(Drawable draw)
+        drawable = draw
+    end
+
+    action AddDuringScene(Main currMain)  
+        main = currMain
+        addDrawable = true
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action Lerp(number a, number b, number t) returns number
+        return a * (1-t) + b * t
+    end
+
+end

@@ -1,0 +1,110 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class Introduction2 is Cinematic
+    
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+    Map tempMap
+    MapList maps
+    InteriorHouse interiorHouseScene
+
+    //NPCs
+    Animation player
+    text playerImgSheet = "Hero"
+
+    //Dialogue
+    Array<text> dialogue1Text
+    Array<text> dialogue2Text
+    Array<text> dialogue3Text
+
+    //PostProcessing
+    Drawable rectangle1
+    Color blue
+
+    //Cinematic Behaviors
+    WaitForBehavior     wait1
+    WaitForBehavior     wait2      
+    PanCameraBehavior   cameraPan1
+    PanCameraBehavior   cameraPan2
+    PanCameraBehavior   cameraPan3
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    MoveNPCBehavior     moveTest1
+    MoveNPCBehavior     moveTest2
+    MoveNPCBehavior     moveTest3
+    RemoveObjectBehavior remove1
+    ColorFadeBehavior   colorFade1
+    ColorFadeBehavior   colorFade2
+    MapTransitionBehavior transition1
+
+    public action Run ()
+        
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+ 
+    private action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+        player = main:GetPlayer():playerSprite
+
+        //Camera
+//        main:GetCamera2D():SetPosition(400,-200,0)
+        
+        dialogue2Text:Add("As you touch the final orb, a power courses through your body. A voice calls to you once more...")
+        dialogue2Text:Add("?: A gift of power...")
+        dialogue2Text:Add("HERO: Who... are you?")
+        dialogue3Text:Add("?: If you desire answers, come to the Arcanium.")
+        dialogue3Text:Add("You feel your body wash away in darkness. All that remains are the lingering words of the strange voice.")
+
+        //PostProcessing
+        blue:SetColor(0,0,0,0.25)
+        rectangle1:LoadFilledRectangle(800,800,blue)
+        main:Add(rectangle1)
+
+        //Test
+    end
+
+    private action BehaviorSetup()
+
+        dialogue1:          SetGame(main)
+        dialogue1:          SetLog(dialogue1Text)
+        dialogue1:          SetRemovalArray(main:GetRemovalArray())
+        dialogue1:          SetCamera(main:GetCamera2D())
+        dialogue2:          SetGame(main)
+        dialogue2:          SetLog(dialogue2Text)
+        dialogue2:          SetRemovalArray(main:GetRemovalArray())
+        dialogue2:          SetCamera(main:GetCamera2D())
+        dialogue3:          SetGame(main)
+        dialogue3:          SetLog(dialogue3Text)
+        dialogue3:          SetRemovalArray(main:GetRemovalArray())
+        dialogue3:          SetCamera(main:GetCamera2D())
+        remove1:            SetDrawable(rectangle1)
+        colorFade2:         SetFade(0,0,0,1, 6)
+        colorFade2:         SetDrawable(rectangle1)
+        transition1:        SetTransition(tempMap, maps:INTERIOR_HOUSE_MAP)
+        transition1:        SetCinematic(interiorHouseScene)
+        
+    end
+
+    private action EnqueueBehaviors()
+
+        cineSequencer:AddCineEvent(dialogue2, true)
+        cineSequencer:AddCineEvent(colorFade2, true)
+        cineSequencer:AddCineEvent(dialogue3, true)
+        cineSequencer:AddCineEvent(transition1, true)
+        cineSequencer:AddCineEvent(remove1, false)
+    end
+end

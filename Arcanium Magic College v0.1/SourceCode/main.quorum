@@ -1,0 +1,1845 @@
+use Libraries.Game.Game
+use Libraries.Game.GameDisplay
+use Libraries.Game.DesktopConfiguration
+use Libraries.Game.DesktopDisplay
+use Libraries.Game.GameDisplay 
+use Libraries.Game.ScreenResolution
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Game.InputMonitor
+use Libraries.Game.InputSet
+use Libraries.Game.InputTable
+use Libraries.Game.Collision.Shapes.CollisionShape2D
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Interface.Events.CollisionListener2D
+use Libraries.Interface.Events.CollisionEvent2D
+use Libraries.Interface.Controls.Button
+use Libraries.Interface.Layouts.Layout
+use Libraries.System.File
+use Libraries.System.Console
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.Graphics.Camera
+use Libraries.Interface.Layouts.ManualLayout
+use Libraries.Compute.Random
+
+class Main is Game, CollisionListener2D, KeyboardListener
+//==============================================================================
+//                             VARIABLE DECLARATION
+//==============================================================================    
+   
+    //Application Configurations
+    DesktopConfiguration deskConfig
+    DesktopDisplay deskDisplay
+    
+    //Queue for storing subsequent Behaviors
+    public BehaviorQueue behaviorQueue
+
+    //Queue for removing objects
+    public Array<Item2D> removalArray
+    public MenuButton debugTest // for Title Screen
+    public Drawable Arcanium // for Title Screen
+    public Drawable TitleBackground
+
+    //Entities
+    Map currentMap
+    Player player1
+	
+    // For Interaction testing      -Ryan
+    Camera camera = undefined
+
+    //For drawing images
+    Drawable testmap
+    Drawable player
+    Drawable box
+    Drawable background
+    Color color   
+
+    //For player movement
+    number newX = 0
+    number newY = 0
+    number plyrSpeed = 100
+    KeyboardEvent keys
+    InputMonitor monitor
+
+    //Input Sets
+    InputTable controlTable
+    InputSet upButton
+    InputSet downButton
+    InputSet leftButton
+    InputSet rightButton
+    InputSet selectButton
+    InputSet backButton
+    InputSet menuButton
+
+    //For Input Rebinding
+    boolean upRebinding = false
+    boolean downRebinding = false
+    boolean leftRebinding = false
+    boolean rightRebinding = false
+    boolean selectRebinding = false
+    boolean backRebinding = false
+    boolean menuRebinding = false
+
+    //Map Names
+    //TO-DO: Export this in the future to a file that we can directly reference in this file
+    MapList maps
+ 
+    //For animations
+    Animation test1
+    Animation test2
+    Animation test3
+    number elapsedTime = 0
+    number fps = 4
+    integer currentFrame = 1
+    number spaceX = 0
+    number spaceY = 0
+    text spriteImgSheet = "Boy"
+    text spriteFrame = "Boy"
+    text spriteImage = "alien"
+    text airImgSheet = "air"
+    text airFrame = "Air"
+    text darkImgSheet = "dark"
+    text darkFrame = "Dark"
+    text earthImgSheet = "earth"
+    text earthFrame = "Earth"
+    text fireImgSheet = "fireball"
+    text fireFrame = "Fireball"
+    text lightImgSheet = "light"
+    text lightFrame = "Light"
+    text waterImgSheet = "water"
+    text waterFrame = "Water"
+
+    boolean doneCreating = false
+
+    //For audio
+    public GameAudioManager audioManager
+
+    //For Cutscenes
+    CinematicSequencer cineSequencer
+
+    //For game Sequencer
+    MapState mapState
+    public CollisionEvent2D currentCollision = undefined
+    public DisplayLogBehavior currentDialogue = undefined
+
+    // bedroom level
+    //For Transition to Combat
+    public boolean inCombat = false
+    boolean playerStatsInitialized = false
+    public boolean lockMovement = false
+
+    integer TPindex = 0
+
+//==============================================================================
+//                             PREBUILT ACTIONS
+//==============================================================================
+    
+    action Main
+
+        StartGame()
+    end
+
+    action CreateGame
+        doneCreating = true
+	
+        //SetResolution()
+        SetKeyboardInput()
+        CreateBackground()
+		
+        // ***These 3 must be commented out for DebugMenuTest() -Maria***
+//        InitializeMap(currentMap, maps:FOREST_CLEARING_MAP)
+//        InitializeInteractables(currentMap, maps:FOREST_CLEARING_MAP)
+//        InitializePlayer(player1)
+//        LoadAboveLayer(currentMap, maps:FOREST_CLEARING_MAP)
+//        
+
+        //==TEST CALLS==
+//        Array<text> enemies
+//        enemies:Add("Goblin")
+//        enemies:Add("Goblin Shaman")
+//        enemies:Add("Goblin")
+//        CombatTest(enemies)
+        //InputTest()
+        //InteractablesTest()
+        //InteractablesTest2()
+        //InitializeAnimTest()
+        //InitializeSpellAnimTest(fireball, Fireball)
+        //InitializeAudioTest()
+        TitleScreenTest()
+        //CineSequencerTest()
+//        DebugMenuTest()
+        //InitializeWhiteRoom()
+        //KeyBindTest()
+//        RuinedTown town
+//        town:Run()
+//        BeginGameSequence()
+
+    end
+
+    action Update(number seconds)
+        if not doneCreating
+            return now
+        end
+
+        // Check if Behaviors are queued
+        behaviorQueue:Update(seconds)
+        cineSequencer:Update(seconds)
+        mapState:Update(seconds, currentMap:name)
+
+        if (not inCombat) and cineSequencer:IsFinished() and player1:playerSprite:sprite1:IsLoaded() and (not lockMovement)
+            PlayerMovement(seconds)
+        else
+            DisableInteraction()
+        end
+        
+        // Center player collision box on player sprite
+        UpdatePlayerCollision()
+
+        if currentCollision not= undefined // if we are colliding with a required interactable
+            if currentDialogue not= undefined and currentDialogue:IsFinished()
+                output "current behavior is display log behavior"
+                    // introduction map
+                    if currentMap:name = maps:INTRODUCTION_MAP
+                        mapState:UpdateJewelsTouched()
+                    end
+
+                    // forest path 1 map
+                    if currentMap:name = maps:FOREST_PATH_1_MAP
+                        mapState:SetRiverCrossed(true)
+                    end
+
+                    if currentMap:name = maps:FOREST_PATH_2_MAP
+                        mapState:SetTreeBurned(true)
+                    end
+
+                    if currentMap:name = maps:FOREST_PATH_3_MAP
+                        mapState:SetFirePutOut(true)
+                    end
+
+                    if currentMap:name = maps:FOREST_PATH_4_MAP
+                        mapState:SetLogPile1Moved(true)
+                    end
+
+                    if currentMap:name = maps:FOREST_PATH_4_MAP_HALF_COMPLETE
+                        mapState:SetLogPile2Moved(true)
+                    end
+
+                    currentCollision = undefined
+                    currentDialogue = undefined
+                end
+        end
+
+        // ScriptedAnimTest(seconds)
+        // SpellAnim(seconds, Fireball)
+        // PlayerMovementWithAnim(seconds)
+
+        // Necessary for removing unneeded objects
+        repeat until removalArray:IsEmpty()
+            Remove(removalArray:RemoveFromFront())
+        end
+
+        audioManager:UpdateAudioList()
+    end
+
+//==============================================================================
+//                             CUSTOM ACTIONS
+//==============================================================================
+
+    action AddToRemove(Item2D object)
+        removalArray:Add(object)
+    end
+
+    action KeyBindTest()
+        
+        Array<text> names
+        names:Add("Up")
+        names:Add("Down")
+        names:Add("Left")
+        names:Add("Right")
+        names:Add("Select")
+        names:Add("Cancel")
+        names:Add("Open Keybindings")
+        names:Add("Open Route-To")
+        InputSet up
+        up:SetKeyboardInput(keys:W)
+        InputSet down
+        down:SetKeyboardInput(keys:S)
+        InputSet left
+        left:SetKeyboardInput(keys:L)
+        InputSet right
+        right:SetKeyboardInput(keys:D)
+        InputSet select
+        select:SetKeyboardInput(keys:SPACE)
+        InputSet cancel
+        cancel:SetKeyboardInput(keys:B)
+        InputSet keybindings
+        keybindings:SetKeyboardInput(keys:Y)
+        InputSet routeTo
+        routeTo:SetKeyboardInput(keys:U)
+        Array<InputSet> inputSets
+        inputSets:Add(up)
+        inputSets:Add(down)
+        inputSets:Add(left)
+        inputSets:Add(right)
+        inputSets:Add(select)
+        inputSets:Add(cancel)
+        inputSets:Add(keybindings)
+        inputSets:Add(routeTo)
+
+        KeybindingMenuBehavior keybindTest
+        keybindTest:SetGame(me)
+        keybindTest:SetRemovalArray(removalArray)
+        keybindTest:SetInputSets(inputSets)
+        keybindTest:SetButtonNames(names)
+        keybindTest:Run(undefined)
+        
+    end
+	  
+    action InitializeMap(Map currMap, Text mapName)
+    //Loads map image, collision, and adds it to layer.
+        EnablePhysics2D(true)
+        currMap:loadMap(mapName)
+        currMap:loadCollisionLayer(mapName)
+        Add(currMap:map)
+        i = 0
+        repeat currMap:collisions:GetSize() times
+            Add(currMap:collisions:Get(i))
+            i = i + 1
+        end
+        AddCollisionListener(me)	
+    end
+
+    action InitializeInteractables(Map currMap, Text mapName)
+// ==== Ryan: Starting Changes ====
+        currMap:loadMapTransitions(mapName)
+        i = 0
+        repeat currMap:transitions:GetSize() times
+            Add(currMap:transitions:Get(i))
+            AddKeyboardListener(currMap:transitions:Get(i))
+            i = i + 1
+        end
+        currMap:loadInteractables(mapName)
+        currMap:getInteractablesData(mapName)
+        i = 0
+        repeat currMap:interactables:GetSize() times
+            Add(currMap:interactables:Get(i))
+            AddKeyboardListener(currMap:interactables:Get(i))
+            currMap:interactables:Get(i):SetRequiredCompleted(currMap:completedInteractables:Get(i))
+            i = i + 1
+        end
+        // ===== Ryan: Ending Changes =====
+
+	AddCollisionListener(me)	
+    end
+
+    action LoadAboveLayer(Map currMap, Text mapName)
+        if(currMap:inAboveMaps(mapName))
+            currMap:loadAboveLayer(mapName)
+            Add(currMap:aboveLayer)
+        end
+    end
+
+    action InitializePlayer(Player player)
+        //Loads player image, enables collision/movement, does NOT add to layer.
+        player:DrawPlayer()
+        player:playerSprite:sprite3:EnablePhysics(true)
+        player:playerSprite:sprite3:CanRotate(false)
+        player:playerSprite:sprite3:SetResponsive()
+        player:playerSprite:sprite3:SetName("player")
+        player:playerSprite:sprite1:SetScale(0.85)
+        player:playerSprite:sprite3:SetScale(0.85)
+        Add(player:playerSprite:sprite1)
+        Add(player:playerSprite:sprite3)
+
+        //Sets camera onto player.
+        camera = GetCamera2D()
+        camera:SetPosition(player1:playerSprite:sprite1:GetX(), player1:playerSprite:sprite1:GetY(), 0)
+        //camera:SetZoom(2)
+    end
+
+    action PlayerMovement(number seconds)
+        // Movement using WASD
+        // Get current location
+        text direction = ""
+        newY = player1:playerSprite:sprite3:GetY()
+        newX = player1:playerSprite:sprite3:GetX()
+
+        elapsedTime = elapsedTime + seconds
+
+        // Add/Sub to both X and Y based on keys
+        if monitor:IsKeyPressed(keys:W)
+            newY = newY + plyrSpeed * seconds
+            direction = "up"
+
+            if currentMap:name:Contains("ForestPath")   // random encounters
+                Random random
+                integer randomInt = random:RandomInteger(999)
+
+                if randomInt <= 1
+                    integer whichEncounter = random:RandomInteger(4)
+
+                    Array<text> enemies
+                    if whichEncounter = 0
+                        enemies:Add("Goblin")
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Goblin")
+                    elseif whichEncounter = 1
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                    elseif whichEncounter = 2
+                        enemies:Add("Slime")
+                        enemies:Add("Slime")
+                    elseif whichEncounter = 3
+                        enemies:Add("Goblin")
+                        enemies:Add("Wolf")
+                    else    //whichEncounter = 5
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Orc")
+                    end
+
+                    CombatTest(enemies)
+                end
+            end
+        end
+        if monitor:IsKeyPressed(keys:S)
+            newY = newY - plyrSpeed * seconds
+            direction = "down"
+
+            if currentMap:name:Contains("ForestPath")   // random encounters
+                Random random
+                integer randomInt = random:RandomInteger(999)
+
+                if randomInt <= 1
+                    integer whichEncounter = random:RandomInteger(4)
+
+                    Array<text> enemies
+                    if whichEncounter = 0
+                        enemies:Add("Goblin")
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Goblin")
+                    elseif whichEncounter = 1
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                    elseif whichEncounter = 2
+                        enemies:Add("Slime")
+                        enemies:Add("Slime")
+                    elseif whichEncounter = 3
+                        enemies:Add("Goblin")
+                        enemies:Add("Wolf")
+                    else    //whichEncounter = 5
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Orc")
+                    end
+
+                    CombatTest(enemies)
+                end
+            end
+        end
+        if monitor:IsKeyPressed(keys:D)
+            newX = newX + plyrSpeed * seconds
+            direction = "right"
+
+            if currentMap:name:Contains("ForestPath")   // random encounters
+                Random random
+                integer randomInt = random:RandomInteger(999)
+
+                if randomInt <= 1
+                    integer whichEncounter = random:RandomInteger(4)
+
+                    Array<text> enemies
+                    if whichEncounter = 0
+                        enemies:Add("Goblin")
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Goblin")
+                    elseif whichEncounter = 1
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                    elseif whichEncounter = 2
+                        enemies:Add("Slime")
+                        enemies:Add("Slime")
+                    elseif whichEncounter = 3
+                        enemies:Add("Goblin")
+                        enemies:Add("Wolf")
+                    else    //whichEncounter = 5
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Orc")
+                    end
+
+                    CombatTest(enemies)
+                end
+            end
+        end
+        if monitor:IsKeyPressed(keys:A)
+            newX = newX - plyrSpeed * seconds
+            direction = "left"
+
+            if currentMap:name:Contains("ForestPath")   // random encounters
+                Random random
+                integer randomInt = random:RandomInteger(999)
+
+                if randomInt <= 1
+                    integer whichEncounter = random:RandomInteger(4)
+
+                    Array<text> enemies
+                    if whichEncounter = 0
+                        enemies:Add("Goblin")
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Goblin")
+                    elseif whichEncounter = 1
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                        enemies:Add("Wolf")
+                    elseif whichEncounter = 2
+                        enemies:Add("Slime")
+                        enemies:Add("Slime")
+                    elseif whichEncounter = 3
+                        enemies:Add("Goblin")
+                        enemies:Add("Wolf")
+                    else    //whichEncounter = 5
+                        enemies:Add("Goblin Shaman")
+                        enemies:Add("Orc")
+                    end
+
+                    CombatTest(enemies)
+                end
+            end
+        end
+        if monitor:IsKeyPressed(keys:ESCAPE)
+            OpenTeleportMenu()
+        end
+
+        // Checks if PLAYER is out of bounds
+        if newY < 0
+            newY = 0
+        end
+        if newX < 0
+            newX = 0
+        end
+        if newY > currentMap:map:GetHeight() - player1:playerSprite:sprite3:GetHeight()
+            newY = currentMap:map:GetHeight() - player1:playerSprite:sprite3:GetHeight()
+        end
+        if newX > currentMap:map:GetWidth() - player1:playerSprite:sprite3:GetWidth()
+            newX = currentMap:map:GetWidth() - player1:playerSprite:sprite3:GetWidth()
+        end
+
+        player1:playerSprite:sprite3:SetPosition(newX,newY)
+        player1:playerSprite:sprite1:SetPosition(newX-20,newY-10)
+        
+        //Sprite Animation
+        if direction = ""
+                elapsedTime = 0
+        elseif elapsedTime >= 1/player1:playerSprite:GetFPS()
+                player1:playerSprite:SetFrame(player1:playerSprite:GetFrame()+1)
+                player1:playerSprite:ChangeFrames(player1:spriteSheetName, direction)
+                elapsedTime = elapsedTime - 1/player1:playerSprite:GetFPS()
+        end
+
+
+        //Player Camera
+        camera = GetCamera2D()
+        camera:SetPosition(player1:playerSprite:sprite1:GetX(), player1:playerSprite:sprite1:GetY(), 0)
+        
+        //Setting Camera Bounds
+        if(camera:GetPosition():GetX() <= camera:GetWidth()/2 - 100)
+            camera:SetPosition(camera:GetWidth()/2 - 100, camera:GetPosition():GetY(), camera:GetPosition():GetZ())
+        elseif(camera:GetPosition():GetX() >= (currentMap:map:GetWidth() - camera:GetWidth()/2 + 100))
+            camera:SetPosition((currentMap:map:GetWidth() - camera:GetWidth()/2 + 100), camera:GetPosition():GetY(), camera:GetPosition():GetZ())
+        end
+        
+        if(camera:GetPosition():GetY() <= camera:GetHeight()/2 - 50)
+            camera:SetPosition(camera:GetPosition():GetX(), camera:GetHeight()/2 - 50, camera:GetPosition():GetZ())
+        elseif(camera:GetPosition():GetY() >= (currentMap:map:GetHeight() - camera:GetHeight()/2 + 50))
+            camera:SetPosition( camera:GetPosition():GetX(), (currentMap:map:GetHeight() - camera:GetHeight()/2 + 50), camera:GetPosition():GetZ())
+        end
+		
+//        if monitor:IsKeyPressed(keys:Q)
+//            TeleportTest(TPindex)
+//        end
+//        if monitor:IsKeyPressed(keys:E)
+//            TPindex = TPindex + 1
+//            if TPindex > 5
+//                TPindex = 0
+//            end
+//            output "Teleport Index: " + TPindex
+//        end
+    end
+
+    // Center player collision box
+    action UpdatePlayerCollision()
+        number x = player1:playerSprite:sprite1:GetX()
+        number y = player1:playerSprite:sprite1:GetY()
+        player1:playerSprite:sprite3:SetPosition(x + 20, y + 10)
+    end
+
+    action BeginCollision(CollisionEvent2D event)
+        CheckForInteraction(event, true)
+    end
+
+    action FinishCollision(CollisionEvent2D event)
+        CheckForInteraction(event, false)
+    end
+
+    action CheckForInteraction(CollisionEvent2D event, boolean entering)
+
+    // This action checks if the collision involes the player
+    // and an Interactable Object.  If so, it toggles the
+    // interactable such that presing [SPACE] should proceed
+    // with the given dialoge.
+    // * The checking is based on the NAME of the DRAWABLES
+    //   > Interactable MUST inherit Drawable for type casting
+
+    /***********************************************************************
+    Collision detection for Interactable Objects (NPCs, Objects, etc.)
+    It is currently commented-out so that nothing breaks
+                                                        - Ryan
+    ***********************************************************************/
+///*      MAIN INTERACTABLE ACITON - ALLOWS FOR INTERACTIONS W/ PLAYER
+        // Variable used to determine if interaction is available
+        boolean interaction = false
+        boolean alreadyInteracting = false
+
+        // Cast collision items as Drawables to use them
+        Drawable itemA = cast(Drawable, event:GetItemA())
+        Drawable itemB = cast(Drawable, event:GetItemB())
+
+        // If PLAYER is in front (added later), swap items
+        if itemB:GetName() = "player"
+            Drawable itemC = itemB
+            itemB = itemA
+            itemA = itemC
+        end
+
+        // Check if PLAYER & INTERACTABLE
+        if itemA:GetName() = "player"
+            if itemB:GetName() = "interactable"
+                interaction = true
+            end
+        end
+        
+        // If interaction is available, enable/disable it
+        if interaction
+            Interactable newItemB = cast(Interactable, itemB)
+
+            i = 0
+            repeat currentMap:interactables:GetSize() times
+                if currentMap:interactables:Get(i):IsInteracting()
+                    alreadyInteracting = true
+                end
+                i = i + 1
+            end
+
+            i = 0
+            repeat currentMap:transitions:GetSize() times
+                if currentMap:transitions:Get(i):IsInteracting()
+                    alreadyInteracting = true
+                end
+                i = i + 1
+            end
+
+            if entering and not alreadyInteracting
+                newItemB:ToggleInteraction()
+                // checks any incompleted interactables that are required
+                if newItemB:requiredCompleted = false
+                    output "setting the current collision"
+                    newItemB:SetRequiredCompleted(true)
+                    currentCollision = event
+                end
+
+            elseif not entering
+                if newItemB:IsInteracting()
+                    newItemB:ToggleInteraction()
+                end
+
+                if currentCollision not= undefined
+                    currentCollision = undefined
+                    newItemB:SetRequiredCompleted(false)
+                end
+            end
+        end
+    end
+
+    // Set all interactable:alreadyInteracting to false
+    action DisableInteraction()
+        i = 0
+        repeat currentMap:interactables:GetSize() times
+            currentMap:interactables:Get(i):ResetInteraction()
+            i = i + 1
+        end
+
+        i = 0
+        repeat currentMap:transitions:GetSize() times
+            currentMap:transitions:Get(i):ResetInteraction()
+            i = i + 1
+        end
+    end
+
+    action GetMap() returns Map
+        return currentMap
+    end
+
+    action GetPlayer() returns Player
+        return player1
+    end
+    
+    action GetRemovalArray returns Libraries.Containers.Array
+        return removalArray
+    end
+
+    action GetCineSequencer returns CinematicSequencer
+        return cineSequencer
+    end
+
+    action GetInCombat returns boolean
+        return inCombat
+    end
+
+
+    action SetMap(Map newMap)
+        currentMap = newMap
+    end
+
+
+    action SetResolution()
+        Array<ScreenResolution> array = GetAvailableResolutions()
+        ScreenResolution resolution = array:Get(21) //800x600 144hz
+        SetScreenResolution(resolution)
+        SetFullScreen(false)
+    end
+
+    action CreateBackground()
+        Drawable background
+        background:LoadFilledRectangle(1920*2,1080*2)
+        background:SetPosition(-1920/2, -1080/2)
+        Add(background)
+    end
+
+    action PlayAudio(text audioName)
+        audioManager:PlayAudio(audioName)
+    end
+
+    action StopAudio(text audioName)
+        audioManager:StopAudio(audioName)
+    end
+
+    action StopAllAudio()
+        audioManager:StopAudioList()
+    end
+
+//==============================================================================
+//                          Input Rebinding
+//==============================================================================
+
+    action SetKeyboardInput()
+        AddKeyboardListener(me)
+        upButton:SetKeyboardInput(keys:W)
+        downButton:SetKeyboardInput(keys:S)
+        leftButton:SetKeyboardInput(keys:A)
+        rightButton:SetKeyboardInput(keys:D)
+        selectButton:SetKeyboardInput(keys:SPACE)
+        backButton:SetKeyboardInput(keys:Q)
+        menuButton:SetKeyboardInput(keys:I)
+    end
+
+    action RebindKey(InputSet in)
+        //RebindKeys rebind
+        KeyboardEvent key
+        output "Rebinding"
+        if (in = upButton)
+            upRebinding = true
+            output "rebinding upButton"
+        end
+        if (in = downButton)
+            downRebinding = true
+            output "rebinding downButton"
+        end
+        if (in = leftButton)
+            leftRebinding = true
+            output "rebinding leftButton"
+        end
+        if (in = rightButton)
+            rightRebinding = true
+            output "rebinding rightButton"
+        end
+        if (in = selectButton)
+            selectRebinding = true
+            output "rebinding selectButton"
+        end
+        if (in = backButton)
+            backRebinding = true
+            output "rebinding backButton"
+        end
+        if (in = menuButton)
+            menuRebinding = true
+            output "rebinding menuButton"
+        end
+    end
+
+    action PressedKey(KeyboardEvent event)
+        if (not upRebinding or not downRebinding or not leftRebinding
+            or not rightRebinding or not selectRebinding or not backRebinding
+            or not menuRebinding)
+            if event:keyCode = upButton:GetInputValue()
+                output "up pressed"
+            end
+            if event:keyCode = downButton:GetInputValue()
+                output "down pressed"
+            end
+            if event:keyCode = leftButton:GetInputValue()
+                output "left pressed"
+            end
+            if event:keyCode = rightButton:GetInputValue()
+                output "right pressed"
+            end
+            if event:keyCode = selectButton:GetInputValue()
+                output "select pressed"
+            end
+            if event:keyCode = backButton:GetInputValue()
+                output "back pressed"
+            end
+            if event:keyCode = menuButton:GetInputValue()
+                output "menu pressed"
+            end
+        end
+        if (upRebinding)
+            if not (event:keyCode = downButton:GetInputValue() or 
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                upButton:SetKeyboardInput(event:keyCode)
+                output "up rebound to " + event:keyCode
+            end
+            upRebinding = false
+        end
+        if (downRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                downButton:SetKeyboardInput(event:keyCode)
+                output "down rebound to " + event:keyCode
+            end
+            downRebinding = false
+        end
+        if (leftRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = downButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                leftButton:SetKeyboardInput(event:keyCode)
+                output "left rebound to " + event:keyCode
+            end
+            leftRebinding = false
+        end
+        if (rightRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = downButton:GetInputValue() or
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                rightButton:SetKeyboardInput(event:keyCode)
+                output "right rebound to " + event:keyCode
+            end
+            rightRebinding = false
+        end
+        if (selectRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = downButton:GetInputValue() or
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                selectButton:SetKeyboardInput(event:keyCode)
+                output "select rebound to " + event:keyCode
+            end
+            selectRebinding = false
+        end
+        if (backRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = downButton:GetInputValue() or
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = menuButton:GetInputValue())
+
+                backButton:SetKeyboardInput(event:keyCode)
+                output "back rebound to " + event:keyCode
+            end
+            backRebinding = false
+        end
+        if (menuRebinding)
+            if not (event:keyCode = upButton:GetInputValue() or 
+                event:keyCode = downButton:GetInputValue() or
+                event:keyCode = leftButton:GetInputValue() or
+                event:keyCode = rightButton:GetInputValue() or
+                event:keyCode = selectButton:GetInputValue() or
+                event:keyCode = backButton:GetInputValue())
+
+                menuButton:SetKeyboardInput(event:keyCode)
+                output "menu rebound to " + event:keyCode
+            end
+            menuRebinding = false
+        end
+    end
+
+    action InputTest()
+        output "rebinding"
+        RebindKey(upButton)
+    end
+
+//==============================================================================
+//                             FOR TESTING
+//==============================================================================
+
+    action CombatTest(Array<text> enemies)
+	if not inCombat
+            inCombat = true
+
+            if not playerStatsInitialized
+                InitializePlayerStats()
+                playerStatsInitialized = true
+            end
+
+            player1:SetCurrentHP(player1:GetMaxHP())
+            player1:SetCurrentMP(player1:GetMaxMP())
+            player1:ClearAllStatus()
+
+            Battle battle
+            battle:SetGame(me)
+            battle:SetRemovalArray(removalArray)
+            battle:SetBehaviorQueue(behaviorQueue)  
+            battle:SetCamera(camera)
+            battle:Initialize(player1, enemies)
+            battle:Run(undefined)
+        end
+    end
+
+    action InitializePlayerStats
+            Array<number> currentElementsEffectiveness
+            currentElementsEffectiveness:Add(1.0)
+            currentElementsEffectiveness:Add(0.7)
+            currentElementsEffectiveness:Add(1.0)
+            currentElementsEffectiveness:Add(1.0)
+            currentElementsEffectiveness:Add(0.5)
+            currentElementsEffectiveness:Add(1.0)
+            Array<integer> currentElementTokens
+            currentElementTokens:Add(4)
+            currentElementTokens:Add(4)
+            currentElementTokens:Add(4)
+            currentElementTokens:Add(4)
+            currentElementTokens:Add(4)
+            currentElementTokens:Add(4)
+            player1:SetStats("Hero", 2000, 2000, 5, 5, 0, 1, 1, currentElementsEffectiveness, currentElementTokens)
+            player1:SetGame(me)
+            player1:SetRemovalArray(removalArray)
+            player1:SetBehaviorQueue(behaviorQueue)
+            player1:SetCamera(camera)
+    end
+    
+    action CineSequencerTest()
+
+        //Setup
+        Animation cineAnimation
+        cineAnimation:LoadImageSheet(spriteImgSheet)
+        cineAnimation:LoadFrame(spriteFrame)
+        Add(cineAnimation:sprite1)
+        cineAnimation:sprite1:SetCollidable(true)
+        cineAnimation:sprite1:SetPosition(10,115)
+        cineAnimation:sprite1:EnablePhysics(true)
+        cineAnimation:sprite1:CanRotate(false)
+        
+        Array<text> dialogue1Text
+        dialogue1Text:Add("Hello Traveller!")
+        dialogue1Text:Add("What brings you to these parts?")
+        dialogue1Text:Add("It's dangerous to go alone, take this!")
+
+        //Cinematic Behaviors
+        WaitForBehavior     wait1
+        WaitForBehavior     wait2      
+        PanCameraBehavior   cameraPan1
+        PanCameraBehavior   cameraPan2
+        PanCameraBehavior   cameraPan3
+        DisplayLogBehavior  dialogue1
+        MoveNPCBehavior     moveTest1
+        MoveNPCBehavior     moveTest2
+        MoveNPCBehavior     moveTest3
+
+
+        //Behavior Setup
+        wait1:              SetWaitDuration(0.3)
+        wait2:              SetWaitDuration(3)
+        cameraPan1:         SetCameraPan(5,40, 5)
+        cameraPan2:         SetCameraPan(25,0, 3.5)
+        cameraPan3:         SetCameraPan(0,30,6)
+        dialogue1:          SetGame(me)
+        dialogue1:          SetLog(dialogue1Text)
+        dialogue1:          SetRemovalArray(removalArray)
+        dialogue1:          SetCamera(camera)
+        moveTest1:          SetAnimation(cineAnimation, spriteImgSheet)
+        moveTest1:          SetMoveDirection(25,0,3.5)
+        moveTest2:          SetAnimation(cineAnimation, spriteImgSheet)
+        moveTest2:          SetMoveDirection(0,45,6)
+        moveTest3:          SetAnimation(cineAnimation, spriteImgSheet)
+        moveTest3:          SetMoveDirection(0,-45,6)
+
+
+        //Adding Behaviors to Sequencer
+        cineSequencer:AddCineEvent(wait1, true)
+        cineSequencer:AddCineEvent(cameraPan1, true)
+        cineSequencer:AddCineEvent(cameraPan2, false)
+        cineSequencer:AddCineEvent(moveTest1, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+        cineSequencer:AddCineEvent(cameraPan3, false)
+        cineSequencer:AddCineEvent(moveTest2, true)
+        cineSequencer:AddCineEvent(wait2, true)
+        cineSequencer:AddCineEvent(moveTest3, true)
+        
+
+        cineSequencer:PlayCineSequence()
+    end
+    
+    action InitializeAnimTest()
+        // Load images for sample animations
+        test1:LoadImageSheet(spriteImgSheet)
+        test1:LoadFrame(spriteFrame)
+        Add(test1:sprite1)
+        test2:LoadImage(spriteImage)
+        Add(test2:sprite2)
+        test2:sprite2:Scale(0.25)
+    end
+
+    // Load images for spell animations, call in action CreateGame
+    action InitializeSpellAnimTest(text spellSheet, text spellFrame)
+        test3:LoadImageSheet(spellSheet)
+        test3:LoadFrame(spellFrame)
+        Add(test3:sprite1)
+    end
+
+    action InitializeAudioTest()
+        /**************************************************************
+                        Ryan's Audio Testing Section
+          * Currently does nothing as I didn't add any test files
+          * Has examples of using the GameAudioManager:
+            > Adding a sound effect (GameSound)
+            > Adding music (Music)
+            > Playing music
+        **************************************************************/
+        // Add each audio file to the GameAudioManager
+        // * Example of adding a sound effect
+//        audioManager:AddAudio("Effect_01", "wav", "effect")
+
+        // * Example of adding music
+        audioManager:AddAudio("CelticImpulse", "ogg", "music")
+        audioManager:AddAudio("FolkRound", "ogg", "music")
+        audioManager:AddAudio("LordOfTheLand", "ogg", "music")
+        audioManager:AddAudio("MidnightTale", "ogg", "music")
+        audioManager:AddAudio("PippinTheHunchback", "ogg", "music")
+        audioManager:AddAudio("SkyeCullin", "ogg", "music")
+        audioManager:AddAudio("TellerOfTheTales", "ogg", "music")
+        audioManager:AddAudio("Wholesome", "ogg", "music")
+
+        // * Example of playing specific music
+        audioManager:PlayAudio("MidnightTale")
+    end
+
+    action OpenTeleportMenu
+        lockMovement = true
+
+        TeleportToMenuBehavior behavior
+        behavior:SetGame(me)
+        behavior:SetPlayer(player1)
+        behavior:SetCurrentMap(currentMap)
+        behavior:SetRemovalArray(removalArray)
+        behavior:Run(undefined)
+    end
+
+//    action TeleportTest(integer index)
+//        BehaviorEvent bevent
+//        TeleportBehavior tpBehavior
+//        tpBehavior:SetPlayer(player1)
+//        tpBehavior:SetMapName(currentMap:name)
+//        tpBehavior:SetPOIIndex(index)
+//        tpBehavior:Run(bevent)
+//    end
+
+    action InteractablesTest()
+    /***********************************************************************
+    Used for loading in a map to test Interactable dialogue as well as
+    the map transition behavior.
+
+                                                        - Lisel
+    ***********************************************************************/
+/*
+        // Initialize the MAP
+        EnablePhysics2D(true)
+        currentMap:loadMap(maps:LIBRARY_MAP)
+        currentMap:loadCollisionLayer(maps:LIBRARY_MAP) // collisions
+        currentMap:loadInteractables(maps:LIBRARY_MAP) // interactables (right now, these are dialogs)
+        currentMap:loadMapTransitions(maps:LIBRARY_MAP) // map transitions (will transfer player to a new map)
+
+        Add(currentMap:testMap)
+
+        // add all of the collisions to the map
+        i = 0
+        repeat currentMap:collisions:GetSize() times
+            Add(currentMap:collisions:Get(i))
+            i = i + 1
+        end
+
+        // add all of the interactables to the map
+        currentMap:getInteractablesData(currentMap:name)
+        i = 0
+        repeat currentMap:interactables:GetSize() times
+            Interactable curr = currentMap:interactables:Get(i)
+            Add(curr) // adds each interactable to the game
+            AddKeyboardListener(curr) // add keyboard listener for each interactable
+            InteractableData data = currentMap:interactableData:Get(i)
+            curr:CreateDialogueBehavior(data)
+            // add in the behavior for the interactable (call a method)
+            i = i + 1
+        end
+
+        // add all of the transitions to the map
+        i = 0
+        repeat currentMap:transitions:GetSize() times
+            Interactable curr = currentMap:transitions:Get(i)
+            Add(curr) // adds each map transition to the game
+            AddKeyboardListener(curr) // add keyboard listener for each transition
+            curr:CreateMapTransitionBehavior(currentMap, curr:GetName()) // will then call the SetTransition in MapTransitionBehavior
+            i = i + 1
+        end
+		
+        // Initialize the PLAYER
+        player1:DrawPlayer()
+        player1:playerSprite:sprite1:EnablePhysics(true)
+        player1:playerSprite:sprite1:CanRotate(false)
+        player1:playerSprite:sprite1:SetResponsive()
+        player1:playerSprite:sprite1:SetName("player")
+		
+        // Enable Collisions in the game
+        AddCollisionListener(me)
+        
+        // Add the PLAYER after everything to be in the foreground
+        Add(player1:playerSprite:sprite1)
+
+        // Add the above layers
+        currentMap:loadAboveLayer(maps:LIBRARY_MAP)
+        Add(currentMap:aboveLayer)
+       */ 
+    end
+
+    action InteractablesTest2()
+        CreateBackground()
+        InitializeMap(currentMap, maps:LIBRARY_MAP)
+        InitializeInteractables(currentMap, maps:LIBRARY_MAP)
+        InitializePlayer(player1)
+        player1:playerSprite:sprite1:SetY(currentMap:map:GetHeight() / 10)
+        player1:playerSprite:sprite1:SetX(currentMap:map:GetWidth() / 10)
+        LoadAboveLayer(currentMap, maps:LIBRARY_MAP)
+    end
+
+    action InitializeWhiteRoom()
+        /***********************************************************************
+                  Here are variables you can edit to test Interactables
+        ***********************************************************************/
+        // Here is the map you start in ("dafault" loads a gray room)
+        text testingMap = "default"
+
+        // Here are the number of each type of Interactable
+        //  * numOfDialogues - Interactables with Dialogue
+        //  * numOfTransitions - Interactables with Map Transitions
+        //  * numOfCombats - Interactables with Combats
+        integer numOfDialogues = 3
+        integer numOfTransitions = 3
+        integer numOfCombats = 3
+
+        // Here are the necessary variables for each Interactable
+        Array<Array<text>> dialogues
+        Array<text> travelMaps
+        Array<Array<text>> enemies
+
+        // Create Array<text> with LINES for a Dialogue Interactable 
+        Array<text> DialogueList1
+        DialogueList1:Add("Insert Lines Here 01")
+        DialogueList1:Add("Insert Lines Here 02")
+        DialogueList1:Add("Insert Lines Here 03")
+        dialogues:Add(DialogueList1)
+
+        Array<text> DialogueList2
+        DialogueList2:Add("This is test dialogue.")
+        DialogueList2:Add("I only have 2 lines.")
+        dialogues:Add(DialogueList2)
+
+        Array<text> DialogueList3
+        DialogueList3:Add("Here you can see my dialogue.")
+        DialogueList3:Add("You may leave and come back to reset my lines.")
+        DialogueList3:Add("Beware Map Transitions.")
+        DialogueList3:Add("They currently do not remove these testing Interactables.")
+        dialogues:Add(DialogueList3)
+
+        // Create text with the MAP_NAMES for Map Transition Interactable 
+        text travelMap1 = maps:INTERIOR_HOUSE_MAP
+        travelMaps:Add(travelMap1)
+
+        text travelMap2 = maps:PROLOGUE_TOWN_MAP
+        travelMaps:Add(travelMap2)
+
+        text travelMap3 = maps:FOREST_CLEARING_MAP
+        travelMaps:Add(travelMap3)
+
+        // Create Array<text> with ENEMY_NAMES for Initiate Combat Interactable
+        Array<text> enemyList1
+        enemyList1:Add("Goblin")
+        enemyList1:Add("Orc")
+        enemyList1:Add("Slime")
+        enemies:Add(enemyList1)
+
+        Array<text> enemyList2
+        enemyList2:Add("Goblin Shaman")
+        enemies:Add(enemyList2)
+
+        Array<text> enemyList3
+        enemyList3:Add("Wolf")
+        enemyList3:Add("Wolf")
+        enemyList3:Add("Wolf")
+        enemies:Add(enemyList3)
+
+        
+        /***********************************************************************
+                    Don't change anything below for WhiteBoxRoom
+        ***********************************************************************/
+        number width = 800
+        number height = 600
+
+        CreateBackground()
+
+        if testingMap not= "default"
+            InitializeMap(currentMap, testingMap)
+            width = currentMap:map:GetWidth()
+            height = currentMap:map:GetHeight()
+        else
+            integer x = cast(integer, width)
+            integer y = cast(integer, height)
+            currentMap:map:LoadFilledRectangle(x,y,color:Gray())
+            Add(currentMap:map)
+            EnablePhysics2D(true)
+            AddCollisionListener(me)
+        end
+
+        integer i = 1
+        repeat numOfDialogues times
+            Interactable testObj01
+            testObj01:CreateInteractable("Dialogue Test " + cast(text, i), "default", 0, 0, width / 2 - 128, height / 4 + (96 * (i - 1)), true)
+            AddKeyboardListener(testObj01)
+            InteractableData temp1
+            temp1:SetInteractableData("Dialogue Test " + cast(text, i), "dialogue", dialogues:Get(i - 1))
+            testObj01:CreateDialogueBehavior(temp1)
+            Add(testObj01)
+            i = i + 1
+        end
+
+        i = 1
+        repeat numOfTransitions times
+            Interactable testObj02
+            testObj02:CreateInteractable(travelMaps:Get(i - 1), "default", 0, 0, (width / 2), height / 4 + (96 * (i - 1)), false)
+            testObj02:LoadFilledRectangle(32, 32, color:Cyan())
+            AddKeyboardListener(testObj02)
+            testObj02:CreateMapTransitionBehavior(currentMap, travelMaps:Get(i - 1), 0, 0, "Wholesome")
+            Add(testObj02)
+            i = i + 1
+        end
+
+        i = 1
+        repeat numOfCombats times
+            Interactable testObj03
+            text testName = "Combat Test " + cast(text, i) 
+            j = 0
+            repeat enemies:Get(i - 1):GetSize() times
+                if j = 0
+                    testName = testName + ": "
+                else
+                    testName = testName + ", "
+                end
+                testName = testName + enemies:Get(i - 1):Get(j)
+                j = j + 1
+            end
+            testObj03:CreateInteractable(testName, "default", 0, 0, (width / 2) + 128, height / 4 + (96 * (i - 1)), true)
+            testObj03:LoadFilledRectangle(32, 32, color:Red())
+            AddKeyboardListener(testObj03)
+            InitiateCombatBehavior temp3
+            temp3:SetEnemyList(enemies:Get(i - 1))
+            testObj03:SetInteractableBehavior(temp3, "combat")
+            Add(testObj03)
+            i = i + 1
+        end
+
+        InitializePlayer(player1)
+        player1:playerSprite:sprite3:SetY(height / 8)
+        player1:playerSprite:sprite3:SetX(width / 2)
+
+        if testingMap not= "default"
+            LoadAboveLayer(currentMap, testingMap)
+        end
+    end
+
+    // Animation without keys, call in action Updates
+    action ScriptedAnimTest(number seconds)
+        elapsedTime = elapsedTime + seconds
+        if elapsedTime >= 1/fps
+            currentFrame = test1:GetFrame()
+            test1:SetFrame(currentFrame + 1)
+            test1:ChangeFrame(spriteFrame)
+            elapsedTime = elapsedTime - 1/fps
+        end
+    end
+
+    /************************************************
+    Spell Animations -- call in action Updates
+    HOW TO:
+    In variable declarations, declare: 
+    Animation <name> (i.e., Animation test3)
+    text <elementName>ImgSheet = "<elementName>
+     text <elementName>Frame = "<ElementName>"
+     (i.e., text fireImgSheet = "fire"
+            text fireFrame = "Fire")
+     Call InitializeSpellAnimTest(...) in action CreateGame with spellImgSheet and spellFrame parameters
+     Call SpellAnim(seconds, <spellFrame>)
+     ************************************************/
+     action SpellAnim(number seconds, text spellFrame)
+     elapsedTime = elapsedTime + seconds
+     	if elapsedTime >= 1/fps
+        	currentFrame = test3:GetFrame()
+        	test3:SetFrame(currentFrame + 1)
+        	test3:ChangeFrame(spellFrame)
+        	//test3:sprite1:Scale(0.9)  // shrinks in size
+        	elapsedTime = elapsedTime - 1/fps
+     	end
+     end
+
+     // Animation with keys, call in action Updates
+     /*action PlayerMovementWithAnim(number seconds)
+     	newY = test1:sprite1:GetY()
+        newX = test1:sprite1:GetX()
+           	
+        if monitor:IsKeyPressed(keys:W)
+            newY = test1:sprite1:GetY() + plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                test1:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:S)
+            newY = test1:sprite1:GetY() - plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                test1:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:D)
+            newX = test1:sprite1:GetX() + plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                test1:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:A)
+            newX = test1:sprite1:GetX() - plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+        	if elapsedTime >= 1/fps
+            	currentFrame = test1:GetFrame()
+            	test1:SetFrame(currentFrame + 1)
+            	test1:ChangeFrame(spriteFrame)
+            	elapsedTime = elapsedTime - 1/fps
+        	end
+    	end
+        
+        test1:sprite1:SetPosition(newX,newY)
+     end*/
+
+// =============================================================================
+//                     Christian's Title Screen
+// =============================================================================
+
+action TitleScreenTest
+    ManualLayout layout
+    me:SetLayout(layout)
+    File file
+    file:SetPath("/Assets/ImageSheets/Arcanium3.png")
+    TitleBackground:Load("/Assets/ImageSheets/back.png")
+    TitleBackground:SetPosition(0,-150)
+    TitleBackground:SetColor(0,0.2,0.2,0.5)
+    Add(TitleBackground)
+    Arcanium:Load(file)
+    Arcanium:SetPosition(100,250)
+    Add(Arcanium)
+
+    TitleScreenBehavior testing1
+    debugTest:SetGame(me)
+    debugTest:SetPosition(350,200)
+    debugTest:SetName("Start Game")
+    debugTest:SetHorizontal(true)
+    debugTest:SetPretty(true)
+    debugTest:SetTarget(debugTest)
+    Add(debugTest)
+    debugTest:SetBehavior(testing1)
+
+    SetFocus(debugTest)
+end
+/***********************************************************************
+                  Maria's DEBUG MENU testing section.
+                       
+***you must exit the Game window before loading and testing a new map***
+***********************************************************************/
+
+    // Initializes/creates buttons
+    action DebugCreateButton(Button button, text buttonText, DebugMenuBehavior behavior, text mapName, text transitionMap)
+        button:SetName(buttonText)
+        behavior:SetMap(currentMap, mapName, transitionMap, player1)
+        //SetFocus(button)
+        Add(button)
+        button:SetBehavior(behavior)
+    end
+
+    // Initializes debug menu for all maps
+    action DebugMenuTest()
+        ManualLayout layout
+        me:SetLayout(layout)
+
+        // Current maps. Add maps here.
+        Button bTestMap
+        Button bForest
+        Button bCastle
+        Button bLibrary
+        Button bForestClearing
+        Button bForestPath1
+        Button bForestPath2
+        Button bForestPath3
+        Button bForestPath4
+        Button bPrologueTown
+        Button bRuinedTown
+        Button bInteriorHouse
+        Button bCamp
+        Button bIntroduction
+
+    // Behaviors for respective buttons above...
+        DebugMenuBehavior testing1
+        DebugMenuBehavior testing2
+        DebugMenuBehavior testing3
+        DebugMenuBehavior testing4
+        DebugMenuBehavior testing5
+        DebugMenuBehavior testing6
+        DebugMenuBehavior testing7
+        DebugMenuBehavior testing8
+        DebugMenuBehavior testing9 
+        DebugMenuBehavior testing10
+        DebugMenuBehavior testing11
+        DebugMenuBehavior testing12
+        DebugMenuBehavior testing13
+        DebugMenuBehavior testing14
+
+        // Current buttons. Initialize new buttons for new maps here.
+        // Currently used for testing (general testing)
+
+        // USE SETPOSITION() TO SET BUTTON POSITION OTHERWISE BUTTON WILL OVERLAP ANOTHER
+        // Button position defaulted at (0,0)
+        // FOR NEW COLUMN: Increment X by 200 FROM PREVIOUS BUTTON
+        // Increment Y by 50 FROM PREVIOUS BUTTON
+
+        // EXAMPLE: bRuinedTown:SetPosition(400, 50)
+
+        // NOTE: I just assigned random transition maps for each button. Feel free to change these to the correct maps
+
+        DebugCreateButton(bTestMap, "TestMap", testing1, maps:TEST_MAP, maps:FOREST_MAP)
+
+        DebugCreateButton(bForest, "Forest", testing2, maps:FOREST_MAP, maps:FOREST_PATH_1_MAP)
+        bForest:SetPosition(0, 50)
+
+        DebugCreateButton(bCastle, "Castle", testing3, maps:CASTLE_MAP, maps:TEST_MAP)
+        bCastle:SetPosition(0, 100)
+
+        DebugCreateButton(bLibrary, "Library", testing4, maps:LIBRARY_MAP, maps:CASTLE_MAP)
+        bLibrary:SetPosition(0, 150)
+
+        DebugCreateButton(bForestClearing, "ForestClearing", testing5, maps:FOREST_CLEARING_MAP, maps:FOREST_MAP)
+        bForestClearing:SetPosition(200, 0)
+
+        DebugCreateButton(bForestPath1, "ForestPath1", testing6, maps:FOREST_PATH_1_MAP, maps:FOREST_PATH_2_MAP)
+        bForestPath1:SetPosition(200, 50)
+
+        DebugCreateButton(bForestPath2, "ForestPath2", testing7, maps:FOREST_PATH_2_MAP, maps:FOREST_PATH_3_MAP)
+        bForestPath2:SetPosition(200, 100)
+
+        DebugCreateButton(bForestPath3, "ForestPath3", testing8, maps:FOREST_PATH_3_MAP, maps:FOREST_PATH_4_MAP)
+        bForestPath3:SetPosition(200, 150)
+
+        DebugCreateButton(bForestPath4, "ForestPath4", testing9, maps:FOREST_PATH_4_MAP, maps:FOREST_MAP)
+        bForestPath4:SetPosition(200, 200)
+
+        DebugCreateButton(bPrologueTown, "PrologueTown", testing10, maps:PROLOGUE_TOWN_MAP, maps:RUINED_TOWN_MAP)
+        bPrologueTown:SetPosition(400, 0)
+
+        DebugCreateButton(bIntroduction, "Introduction", testing11, maps:INTRODUCTION_MAP, maps:INTERIOR_HOUSE_MAP)
+
+        DebugCreateButton(bRuinedTown, "RuinedTown", testing11, maps:RUINED_TOWN_MAP, maps:TEST_MAP)
+        bRuinedTown:SetPosition(400, 50)
+ 
+        DebugCreateButton(bInteriorHouse, "InteriorHouse", testing12, maps:INTERIOR_HOUSE_MAP, maps:TEST_MAP)
+        bInteriorHouse:SetPosition(400, 100)
+
+        DebugCreateButton(bCamp, "Camp", testing13, maps:CAMP_MAP, maps:TEST_MAP)
+        bCamp:SetPosition(400, 150)
+
+        DebugCreateButton(bIntroduction, "Introduction", testing14, maps:INTRODUCTION_MAP, maps:INTERIOR_HOUSE_MAP)
+        bIntroduction:SetPosition(600, 150)
+
+    end
+/***********************************************************************
+                     End of Maria's debug menu section.
+***********************************************************************/
+
+/***********************************************************************
+                     GAME SEQUENCE TEST - LISEL
+  This section serves as a way to test how our game will actually run:
+    - Loads in the maps in the correct order
+    - Saves the states of maps when necessary
+    - Initializes and sets bools used for Interactables / achievement
+        tracking
+    - Loads in appropriate cutscenes
+***********************************************************************/
+
+// pseudocode to plan out functionalities
+
+// load in the introduction scene where player learns all elements
+    // if player touches all elements, load in the interior house
+        // fade out the level for a few seconds, then black, then fade in interior house
+// loads in the village scene (does not happen in our code, only happens when player exits the house)
+    // does the intetrnasitionsrior house state have to be saved?
+// map transition with the player getting knocked out 
+// load the forest clearing map
+// load the forest path 1 map
+    // save the state of whether or not the obstacle has been completed
+    // river interactable will have a bool that determines if it has been completed
+    // if player interacts with river interactales
+        // save the location of the player
+        // fade to black
+        // play sound effect
+        // load in the new map with the completed obstacle
+        // set the obstacle's completed to true (so that the map will never load again with the uncompleted obstacle)
+        // load the player
+// load the forest path 2 map
+    // if player interacts with the burnable tree interactable
+        // save the location of the player
+        // fade to black
+        // play sound effect
+        // load in the new map with the completed obstacle
+        // set the interactable's completed to true
+        // load the player
+// load the forest path 3 map
+    // initial state of obstacle completed is false
+    // if player interacts with fire interactables
+        // save the location of the player
+        // fade to black
+        // play sound effect
+        // load in the new map with the completed obstacle
+        // set the interactable's complete to true
+        // load the player
+// load the forest path 4 map
+    // initial state of obstacle completed is false
+    // if player interacts with log 1 interactables
+        // save the location of the player
+        // fade to black
+        // play sound effect
+        // load in the new map with the half completed obstacle
+        // set the interactable's half complete to true
+        // load the player
+    // if player interacts with the log 2 interactables
+        // save the location of the player
+        // fade to black
+        // play sound effect
+        // load in the new map with the completed obstacle
+        // set the interactable's complete to true
+        // load the player    
+// load the village ruins
+    // after reaching a certain spot, load the transition to refugee camp cutscene
+// load the refugee camp
+    // load cutscene where son finds his father
+
+action BeginGameSequence
+    InitializeMap(currentMap, maps:INTRODUCTION_MAP)
+    InitializeInteractables(currentMap, maps:INTRODUCTION_MAP)
+    InitializePlayer(player1)
+    audioManager:AddAudio("Virtutes Vocis", "wav", "music")
+    audioManager:PlayAudio("Virtutes Vocis")
+
+    Introduction intro
+    intro:Run()
+end 
+
+/***********************************************************************
+                     END OF GAME SEQUENCE TEST
+***********************************************************************/
+end
+
+//==============================================================================
+//               COMMENTED OUT CODE (FOR REUSE OR FOR DELETION)
+//============================================================================== 
+
+
+//--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
+
+//        ***********************************************************************/
+//        INTERACTABLES CODE (MOVE THIS ALL TO A FUNCTION, (CTRL + /) TO UNCOMMENT), MOVED BY ALBERT
+//        ***********************************************************************/
+//
+//        /***********************************************************************
+//        Start test section
+//        * It should load the FOREST with 3 objects with different interactions
+//        * PLAYER should use [SPACE] to trigger behaviors
+//          1. Black box, no collision    (dialogue)
+//            - 3 Lines of dialogue
+//          2. Clear box, with collision  (dialogue)
+//            - 2 Lines of dialogue (overlaps the chair in the map)
+//          3. White box, no collision    (transition)
+//            - Transitions to CASTLE
+//                                                                  -Ryan
+//        ***********************************************************************/
+//
+//        // Add INTERACTABLEs to the game (Currently 3)
+//        // * This part is currently HARD-CODED for testing
+//        // * Likely parse a JSON file of INTERACTABLEs info
+//        // * Could store the INTERACTABLE LIST with each map (Edit Map.quorum)
+//        integer index = 0
+//        repeat until index = 3
+//            // Create a new INTERACTABLE to add to the LIST
+//            Interactable fillerInteractable
+//            npcList:Add(fillerInteractable)
+//			
+//            // Hard-Coded Objects to add for testing
+//            if index = 0
+//                // A clear box overlapping the CHAIR in the MAP
+//                // Interacts via DIALOGUE
+//                npcList:Get(index):CreateInteractable("Wooden Chair", "clear", 11, 5.5, true)
+//                DialogueBehavior newDialogue1
+//                newDialogue1:AddDialogue("There is a chair infront of you.")
+//                newDialogue1:AddDialogue("It is TANGIBLE.")
+//                npcList:Get(index):SetInteractableBehavior(newDialogue1, "dialogue")
+//            elseif index = 1
+//                // A black box that has no collision
+//                // Interacts via DIALOGUE
+//                npcList:Get(index):CreateInteractable("Black Box", "default", 10, 4, false)
+//                DialogueBehavior newDialogue1
+//                newDialogue1:AddDialogue("You cannot touch this black box (INTANGIBLE).")
+//                newDialogue1:AddDialogue("It shows interaction without physical collision.")
+//                newDialogue1:AddDialogue("It is under your sprite (due to being before later).")
+//                npcList:Get(index):SetInteractableBehavior(newDialogue1, "dialogue")
+//            elseif index = 2
+//                // A cyan box that has no collision
+//                // Interacts via MAP-TRANSITION
+//                npcList:Get(index):CreateInteractable("Back to Castle", "clear", 0, 4, false)
+//                npcList:Get(index):LoadFilledRectangle(32,32,color:Cyan())
+//                MapTransitionBehavior newTransition1
+//                newTransition1:SetTransition(currentMap, maps:CASTLE_MAP, npcList)
+//                newTransition1:SetCoordinates(16, 12)
+
+//                // Test Section of adding INTERACTABLEs to the new MAP
+//                Interactable newInteractable
+//                newInteractable:CreateInteractable("Back to Forest", "clear", 17, 12, false)
+//                newInteractable:LoadFilledRectangle(32,32,color:Cyan())
+//                MapTransitionBehavior newTransition2
+//                newTransition2:SetTransition(currentMap, maps:FOREST_MAP, npcList)
+//                newTransition2:SetCoordinates(1, 4)
+//
+////    // THIS PART DOES NOT WORK
+////    //            j = 0
+////    //            repeat npcList:GetSize() times
+////    //                newTransition2:AddNPC(npcList:Get(j))
+////    //                j = j + 1
+////    //            end
+//
+//                newInteractable:SetInteractableBehavior(newTransition2, "transition")
+//                newTransition1:AddNPC(newInteractable)
+//
+//                npcList:Get(index):SetInteractableBehavior(newTransition1, "transition")
+//            end
+//			S
+//            // Add the INTERACTABLEs to the game
+//            Add(npcList:Get(index))
+//            AddKeyboardListener(npcList:Get(index))
+//            index = index + 1
+//        end
+//		
+//        // Add the PLAYER after everything to be in the foreground
+//        Add(player1:playerSprite:sprite1)
+//
+//        // Add the above layers
+//        currentMap:loadAboveLayer(maps:FOREST_MAP)
+//        Add(currentMap:aboveLayer)
+//		
+//        // Set the camera
+//        camera = GetCamera2D()
+//        camera:SetPosition(player1:playerSprite:sprite1:GetX() + 200, player1:playerSprite:sprite1:GetY() + 200, 0)
+//        /***********************************************************************
+//        End test Section
+//        ***********************************************************************/
+
+
+//--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
+
+    /**********************************************************************
+        TESTING RYAN'S LOGIC - used to accept player input
+    ***********************************************************************/
+
+//        // Movement using WASD
+//        // Get current location
+//        newY = player1:playerSprite:sprite1:GetY()
+//        newX = player1:playerSprite:sprite1:GetX()
+//
+//        // Add/Sub to both X and Y based on keys
+//        if monitor:IsKeyPressed(keys:W)
+//            newY = newY + plyrSpeed * seconds
+//            
+//            // for animation -- commented out for testing
+//            /*newY = testAnimation:girl:GetY() + plyrSpeed * seconds
+//            //for animation
+//            if elapsedTime >= 1/fps
+//                frame = frame + 1
+//            if frame > 3
+//                frame = 1 
+//            end
+//            testAnimation:ChangeFrame()
+//            elapsedTime = elapsedTime - 1/fps
+//            end*/
+//        end
+//        if monitor:IsKeyPressed(keys:S)
+//            newY = newY - plyrSpeed * seconds
+//        end
+//        if monitor:IsKeyPressed(keys:D)
+//            newX = newX + plyrSpeed * seconds
+//        end
+//        if monitor:IsKeyPressed(keys:A)
+//            newX = newX - plyrSpeed * seconds
+//        end
+//
+//        // Checks if PLAYER is out of bounds
+//        if newY < 0
+//            newY = 0
+//        end
+//        if newX < 0
+//            newX = 0
+//        end
+//        if newY > currentMap:testMap:GetHeight() - player1:playerSprite:sprite1:GetHeight()
+//            newY = currentMap:testMap:GetHeight() - player1:playerSprite:sprite1:GetHeight()
+//        end
+//        if newX > currentMap:testMap:GetWidth() - player1:playerSprite:sprite1:GetWidth()
+//            newX = currentMap:testMap:GetWidth() - player1:playerSprite:sprite1:GetWidth()
+//        end
+//
+//        player1:playerSprite:sprite1:SetPosition(newX,newY)
+        
+    /**********************************************************************
+        END OF PLAYER INPUT LOGIC
+    ***********************************************************************/  
+	
+
+//--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
+
+    /**********************************************************************
+    More sample animations 
+    ***********************************************************************/
+
+        /*spaceX = test2:sprite2:GetX() + 50 * seconds
+        spaceY = test2:sprite2:GetY() + 50 * seconds
+        test2:sprite2:SetPosition(spaceX, spaceY)
+        */
+
+        // Animation without using keys
+        /*elapsedTime = elapsedTime + seconds
+        if elapsedTime >= 1/fps
+            currentFrame = test:GetFrame()
+            test:SetFrame(currentFrame + 1)
+            test:ChangeFrame(spriteFrame)
+            elapsedTime = elapsedTime - 1/fps
+        end*/
+    
+    /***********************************************************************
+        Sprite Animation
+		- Jania & Maria
+    ***********************************************************************/	
+	
+	/*
+	// 	UPDATED - commented out for testing
+            if monitor:IsKeyPressed(keys:W)
+            newY = test1:sprite1:GetY() + plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                test1:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:S)
+            newY = test1:sprite1:GetY() - plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                testAnimation:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:D)
+            newX = test1:sprite1:GetX() + plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+            if elapsedTime >= 1/fps
+                currentFrame = test1:GetFrame()
+                test1:SetFrame(currentFrame + 1)
+                test1:ChangeFrame(spriteFrame)
+                elapsedTime = elapsedTime - 1/fps
+            end
+
+        elseif monitor:IsKeyPressed(keys:A)
+            newX = test1:sprite1:GetX() - plyrSpeed * seconds
+            elapsedTime = elapsedTime + seconds
+        if elapsedTime >= 1/fps
+            currentFrame = test1:GetFrame()
+            test1:SetFrame(currentFrame + 1)
+            test1:ChangeFrame(spriteFrame)
+            elapsedTime = elapsedTime - 1/fps
+        end
+    end
+        
+        test1:sprite1:SetPosition(newX,newY)
+    */

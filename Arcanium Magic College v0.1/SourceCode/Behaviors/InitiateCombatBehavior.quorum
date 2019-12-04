@@ -1,0 +1,40 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Containers.Array
+
+class InitiateCombatBehavior is Behavior
+    GameStateManager manager            // Used to get MAIN
+    Color color
+    Interactable object = undefined
+    Array<text> enemyList
+
+    boolean finished = false
+
+    action Run(BehaviorEvent event)
+        Main main = cast(Main, manager:GetGame())
+        if object not= undefined
+            main:AddToRemove(object)
+        end
+        if(object not= undefined)
+            main:AddToRemove(object)
+        end
+        main:CombatTest(enemyList)
+        finished = true
+        output finished
+    end
+
+    action SetInteractable(Interactable newObject)
+        object = newObject
+    end
+
+    action SetEnemyList(Array<text> newEnemyList)
+        enemyList = newEnemyList
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+end

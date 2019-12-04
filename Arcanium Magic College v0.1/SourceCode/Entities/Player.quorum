@@ -1,0 +1,154 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+use Libraries.Game.Graphics.Color
+
+class Player is Combatant
+
+    integer currentMP = 5           //current mana amount for casting spells
+    integer maxMP = 5               //maximum amount of mana allowed
+    integer expToNextLevel = 100    //experience to get to next level
+    Array<integer> currentElementTokens //current limits to how many of a particular element can be used in a spell
+    
+    public Animation playerSprite
+    public text spriteSheetName = "Hero"
+
+    /*When initialized the currentElementTokens array is given 
+    6 undefined values, it also cannot grow larger or smaller*/
+    on create
+        currentElementTokens:SetSize(6)
+        currentElementTokens:SetMaxSize(6)
+        currentElementTokens:SetAutoResize(false)
+    end
+
+    action SetStats(text newName, integer newCurrentHP, integer newMaxHP, 
+     integer newCurrentMP, integer newMaxMP, integer newExperienceValue, 
+     integer newLevel, number newCurrentAttack, 
+     Array<number> newCurrentElementsEffectiveness, 
+     Array<integer> newCurrentElementTokens)
+        SetName(newName)
+        SetCurrentHP(newCurrentHP)
+        SetMaxHP(newMaxHP)
+        SetCurrentMP(newCurrentMP)
+        SetMaxMP(newMaxMP)
+        SetExperienceValue(newExperienceValue)
+        SetLevel(newLevel)
+        SetCurrentAttack(newCurrentAttack)
+        integer i = 0
+        repeat while (i < 6)
+            SetCurrentElementsEffectivenessAtPosition(i,
+             newCurrentElementsEffectiveness:Get(i))
+            SetCurrentElementTokensAtPosition(i, newCurrentElementTokens:Get(i))
+            i = i + 1
+        end
+    end
+
+    action DrawPlayer()
+        playerSprite:LoadImageSheet(spriteSheetName)
+        playerSprite:LoadFrame(spriteSheetName)
+
+        Color color
+        playerSprite:sprite3:LoadRectangle(32, 32, color:Clear())
+    end
+
+    /*Update player's experience, leveling them up if they have reached the
+    required amount*/
+    action AddExperience(integer expEarned, integer enemyLevel)
+        if (expToNextLevel > 0)
+            expEarned = CalculateExperience(expEarned, enemyLevel)
+            SetExperienceValue(GetExperienceValue() + expEarned)
+            if (GetExperienceValue() >= expToNextLevel)
+                SetExperienceValue(GetExperienceValue() - expToNextLevel)
+                LevelUp()
+            end
+        end
+    end
+
+    /*Calculate the actual amount of experience earned by defeating an enemy
+    based off the relative levels of the player and enemy*/
+    action CalculateExperience(integer expEarned, integer enemyLevel) returns integer
+        number multiplier = 1
+        number levelDifference = cast(number, GetLevel() - enemyLevel)
+
+        multiplier = 1 + (levelDifference * 0.25)
+
+        if (multiplier > 2.0)
+            multiplier = 2.0
+        elseif (multiplier < 0.25)
+            multiplier = 0.25
+        end
+
+        expEarned = cast(integer, expEarned * multiplier)
+
+        return expEarned
+    end
+
+    /*Updates stats according to new level and sets next experience requirement*/
+    action LevelUp()
+        JavaScriptObjectNotation rewards
+        File levelsList
+        levelsList:SetPath("Assets\Experience\LevelUpRewards.json")
+        rewards:Read(levelsList)
+        JavaScriptObjectNotation levels = rewards:GetObject("Levels")
+        JavaScriptObjectNotation nextLevel = levels:Get(GetLevel())
+
+        SetMaxHP(nextLevel:GetValue("healthIncrease"):ParseInteger() + GetMaxHP())
+        SetCurrentHP(nextLevel:GetValue("healthIncrease"):ParseInteger() + GetCurrentHP())
+        SetMaxMP(nextLevel:GetValue("manaIncrease"):ParseInteger() + GetMaxMP())
+        SetCurrentMP(nextLevel:GetValue("manaIncrease"):ParseInteger() + GetCurrentMP())
+        SetExpToNextLevel(nextLevel:GetValue("expToNextLevel"):ParseInteger())
+        SetCurrentAttack(nextLevel:GetValue("currentAttackMultiplier"):ParseNumber() * GetCurrentAttack())
+        SetLevel(GetLevel() + 1)
+    end
+
+    /*Increase the token counter for the element at the position given by one.
+    Does not increase if at or past the cap of 4*/
+    action IncrementCurrentElementTokensAtPosition(integer position)
+        if (currentElementTokens:Get(position) < 4)
+            SetCurrentElementTokensAtPosition(position, 
+             currentElementTokens:Get(position) + 1)
+        end
+    end
+
+/*******************************************************************************
+                    Getters and Setters Below This Point
+*******************************************************************************/
+
+    action SetCurrentMP(integer newCurrentMP)
+        currentMP = newCurrentMP
+    end
+
+    action GetCurrentMP() returns integer
+        return currentMP
+    end
+
+    action SetMaxMP(integer newMaxMP)
+        maxMP = newMaxMP
+    end
+
+    action GetMaxMP() returns integer
+        return maxMP
+    end
+
+    action SetExpToNextLevel(integer newExpToNextLevel)
+        expToNextLevel = newExpToNextLevel
+    end
+
+    action GetExpToNextLevel() returns integer
+        return expToNextLevel
+    end
+
+    action SetCurrentElementTokensAtPosition(integer position, integer newCurrentElementTokens)
+        currentElementTokens:Set(position, newCurrentElementTokens)
+    end
+
+    action GetCurrentElementTokensAtPosition(integer position) returns integer
+        return currentElementTokens:Get(position)
+    end
+
+    action GetCurrentElementTokens() returns Array<number>
+        return currentElementTokens
+    end
+
+end

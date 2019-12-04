@@ -1,0 +1,117 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Interface.Item
+use Libraries.Game.Graphics.Camera    
+use Libraries.Game.Game
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Math
+
+class MoveNPCBehavior is Behavior
+    
+    Animation npc
+    text npcName = ""
+    text direction = "down"
+    number x = 0 
+    number y = 0
+    number maxTime = 0
+    number currTime = 0
+    number elapsedTime = 0
+    integer frame = 0
+    Math math
+    boolean finished = false
+    boolean isCollidable = false
+    boolean setCollidable = false
+    boolean setDirection = false
+    boolean setFrame = false
+
+    action Run (BehaviorEvent event)
+        currTime = 0   
+        if(setCollidable = true)
+            npc:sprite1:SetCollidable(isCollidable)
+            npc:sprite3:SetCollidable(isCollidable)
+        end
+        if(frame not= 0)
+            npc:SetFrame(frame)
+            npc:LoadFrame2(npcName)
+        end
+        if(setDirection)
+            npc:ChangeFrames(npcName, direction)
+        end
+        output "MoveNPCBehavior"
+    end
+
+    action Update(number seconds)
+        if(currTime <= maxTime)
+          currTime = currTime + seconds
+          elapsedTime = elapsedTime + seconds
+          npc:sprite1:Move(x*seconds,y*seconds)
+          npc:sprite3:Move(x*seconds,y*seconds)
+
+          //Calculating sprite direction
+          if(math:AbsoluteValue(x) > math:AbsoluteValue(y))
+            if(x > 0)
+               direction = "right" 
+            else
+               direction = "left"
+            end
+          else
+            if(y > 0)
+                direction = "up"
+            else
+                direction = "down"
+            end
+          end
+
+          if npcName = ""
+            output "Missing animation frame name!"
+          else 
+            if elapsedTime >= 1/npc:GetFPS()
+                npc:SetFrame(npc:GetFrame()+1)
+                npc:ChangeFrames(npcName, direction)
+                elapsedTime = elapsedTime - 1/npc:GetFPS()
+            end
+          end
+        else
+            if(setDirection = false and setFrame = false)
+                //Set to standing frame
+                npc:SetFrame(99)
+                npc:ChangeFrames(npcName, direction) 
+            end
+            finished = true
+        end
+
+    end
+
+    action SetMoveDirection( number xMoveSpeed, number yMoveSpeed, number duration)
+        x = xMoveSpeed
+        y = yMoveSpeed
+        maxTime = duration
+        
+    end
+
+    action SetAnimation(Animation animation, text animName)
+        npc = animation
+        npcName = animName
+    end
+    
+    action IsFinished returns boolean
+        return finished
+    end
+    
+    action SetNPCCollidable(boolean collision)
+        isCollidable = collision
+        setCollidable = true
+    end
+
+    action SetFrame(integer tempFrame)
+        frame = tempFrame
+        setFrame = true
+    end
+
+    action SetDirection(text tempDirection)
+        direction = tempDirection
+        setDirection = true
+    end
+
+end

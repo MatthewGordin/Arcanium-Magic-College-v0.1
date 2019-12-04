@@ -1,0 +1,44 @@
+use Libraries.Containers.Array
+
+class CombatAction 
+
+    Array<Combatant> combatants
+    Array<integer> targetIndexes
+    Array<text> targetNames
+    Array<Attack> storedAttack
+
+    action AddTargetIndex(integer newPosition)
+        targetIndexes:Add(newPosition)
+
+        integer counter = 0
+
+        targetNames:Empty()
+
+        repeat while counter < targetIndexes:GetSize()
+            targetNames:Add(combatants:Get(targetIndexes:Get(counter)):GetName())
+
+            counter = counter + 1
+        end
+    end
+
+    action GetTargetIndexes returns Array<integer>
+        return targetIndexes
+    end
+
+    action ClearTargetIndexes
+        targetIndexes:Empty()
+    end
+
+    action SetCombatants(Array<Combatant> newArray)
+        combatants = newArray
+    end
+
+    action SetStoredAttack(Attack newAttack)
+        storedAttack:Empty()
+        storedAttack:Add(newAttack)
+    end
+
+    action GetStoredAttack returns Attack
+        return storedAttack:Get(0)
+    end
+end

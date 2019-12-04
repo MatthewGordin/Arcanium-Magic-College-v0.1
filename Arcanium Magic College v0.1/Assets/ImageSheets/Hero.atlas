@@ -1,0 +1,90 @@
+
+Hero.png
+size: 1024,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Hero frame 1
+  rotate: false
+  xy: 0, 0
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 2
+  rotate: false
+  xy: 72, 0
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 3
+  rotate: false
+  xy: 144, 0
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 4
+  rotate: false
+  xy: 0, 72
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 5
+  rotate: false
+  xy: 72, 72
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 6
+  rotate: false
+  xy: 144, 72
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 7
+  rotate: false
+  xy: 0, 144
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 8
+  rotate: false
+  xy: 72, 144
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 9
+  rotate: false
+  xy: 144, 144
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 10
+  rotate: false
+  xy: 0, 216
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 11
+  rotate: false
+  xy: 72, 216
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1
+Hero frame 12
+  rotate: false
+  xy: 144, 216
+  size: 72, 72
+  orig: 72, 72
+  offset: 0, 0
+  index: -1

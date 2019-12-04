@@ -1,0 +1,61 @@
+use Libraries.Containers.Array
+
+class MapList 
+    public Array<text> ALL_MAPS
+
+    public text TEST_MAP = "Testmap"
+    public text FOREST_MAP = "Forest"
+    public text CASTLE_MAP = "Castle"
+    public text LIBRARY_MAP = "Library"
+    public text FOREST_CLEARING_MAP = "ForestClearing"
+
+    // versions of forest path maps that do not have obstacles completed
+    public text FOREST_PATH_1_MAP = "ForestPath1"
+    public text FOREST_PATH_2_MAP = "ForestPath2"
+    public text FOREST_PATH_3_MAP = "ForestPath3"
+    public text FOREST_PATH_4_MAP = "ForestPath4"
+
+    // versions of forest path maps that have their obstacles completed
+    public text FOREST_PATH_1_MAP_COMPLETE = "ForestPath1Complete"
+    public text FOREST_PATH_2_MAP_COMPLETE = "ForestPath2Complete"
+    public text FOREST_PATH_3_MAP_COMPLETE = "ForestPath3Complete"
+    public text FOREST_PATH_4_MAP_HALF_COMPLETE = "ForestPath4HalfComplete"
+    public text FOREST_PATH_4_MAP_COMPLETE = "ForestPath4Complete"
+
+    public text PROLOGUE_TOWN_MAP = "PrologueTown"
+    public text RUINED_TOWN_MAP = "RuinedTown"
+    public text INTERIOR_HOUSE_MAP = "InteriorHouse"
+    public text CAMP_MAP = "Camp"
+    public text INTRODUCTION_MAP = "Introduction"
+
+    on create
+        setMapList()
+    end
+
+    action setMapList()
+        ALL_MAPS:Add(TEST_MAP)
+        ALL_MAPS:Add(FOREST_MAP)
+        ALL_MAPS:Add(CASTLE_MAP)
+        ALL_MAPS:Add(LIBRARY_MAP)
+        ALL_MAPS:Add(FOREST_CLEARING_MAP)
+        ALL_MAPS:Add(FOREST_PATH_1_MAP)
+        ALL_MAPS:Add(FOREST_PATH_2_MAP)
+        ALL_MAPS:Add(FOREST_PATH_3_MAP)
+        ALL_MAPS:Add(FOREST_PATH_4_MAP)
+        ALL_MAPS:Add(FOREST_PATH_1_MAP_COMPLETE)
+        ALL_MAPS:Add(FOREST_PATH_2_MAP_COMPLETE)
+        ALL_MAPS:Add(FOREST_PATH_3_MAP_COMPLETE)
+        ALL_MAPS:Add(FOREST_PATH_4_MAP_HALF_COMPLETE)
+        ALL_MAPS:Add(FOREST_PATH_4_MAP_COMPLETE)
+        ALL_MAPS:Add(PROLOGUE_TOWN_MAP)
+        ALL_MAPS:Add(RUINED_TOWN_MAP)
+        ALL_MAPS:Add(INTERIOR_HOUSE_MAP)
+        ALL_MAPS:Add(CAMP_MAP)
+        ALL_MAPS:Add(INTRODUCTION_MAP)
+
+    end
+
+    action Has(text map) returns boolean
+        return ALL_MAPS:Has(map)
+    end
+end

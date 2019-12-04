@@ -1,0 +1,93 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Interface.Item2D
+use Libraries.Game.Game
+
+class DamageCalculationBehavior is Behavior
+
+    Game game
+    Battle battle
+    Array<Item2D> removalArray
+    Combatant caster
+    Combatant target
+    Spell spell
+    Array<Item2D> previousPage
+    Array<Item2D> currentPage
+    Array<CombatAddTokenBehavior> previousBehaviors
+    integer maxTokens = 0
+    integer currentTokens = 0
+    integer spellID = 0
+    integer elementID = 0
+    Array<Drawable> tokenDrawables
+
+    action Run(BehaviorEvent event)
+        
+    end
+
+    action Dispose
+        integer counter = 0
+
+        repeat while counter > previousPage:GetSize()
+            removalArray:Add(previousPage:Get(counter))
+            counter = counter + 1
+        end
+
+        battle:EnemyTurn()
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetSpell(Spell newSpell)
+        spell = newSpell
+    end
+
+    action SetCaster(Combatant newCombatant)
+        caster = newCombatant
+    end
+
+    action SetTarget(Combatant newCombatant)
+        target = newCombatant
+    end
+
+    action SetElementID(integer newID)
+        elementID = newID
+    end
+
+    action SetSpellID(integer newID)
+        spellID = newID
+    end
+
+    action SetMaxTokens(integer newMax)
+        maxTokens = newMax
+    end
+
+    action SetCurrentTokens(integer newTokens)
+        currentTokens = newTokens
+    end
+
+    action SetTokenDrawables(Array<Drawable> newArray)
+        tokenDrawables = newArray
+    end
+
+    action SetPreviousBehaviors(Array<CombatAddTokenBehavior> newArray)
+        previousBehaviors = newArray
+    end
+
+    action SetPreviousPage(Array<Item2D> newArray)
+        previousPage = newArray
+    end
+
+end

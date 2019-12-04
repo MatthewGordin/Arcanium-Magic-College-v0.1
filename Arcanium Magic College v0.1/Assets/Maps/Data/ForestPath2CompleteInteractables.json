@@ -1,0 +1,25 @@
+{
+    "interactables": [
+        {
+            "name": "Goblin Camp Interactable",
+            "type": "dialogue",
+            "dialogue": [
+                "It's probably best to avoid the goblin camp and getting found out by all of the goblins."
+            ]
+        },
+        {
+            "name": "Goblin Camp Interactable",
+            "type": "dialogue",
+            "dialogue": [
+                "It's probably best to avoid the goblin camp and getting found out by all of the goblins."
+            ]
+        },
+        {
+            "name": "Goblin Camp Interactable",
+            "type": "dialogue",
+            "dialogue": [
+                "It's probably best to avoid the goblin camp and getting found out by all of the goblins."
+            ]
+        }
+    ]
+}

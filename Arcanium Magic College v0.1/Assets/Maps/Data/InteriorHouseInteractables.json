@@ -1,0 +1,67 @@
+{
+  "interactables": [
+    {
+      "name": "Interactable Kitchen",
+      "type": "dialogue",
+      "dialogue": [
+        "There's nothing but a breadbox here."
+      ]
+    },
+    {
+      "name": "Interactable Cabinet 1",
+      "type": "dialogue",
+      "dialogue": [
+        "It's full of spices of all kinds."
+      ]
+    },
+    {
+      "name": "Interactable Book",
+      "type": "dialogue",
+      "dialogue": [
+        "This book is exactly like the one from your dreams. The pages are full of runes."
+      ]
+    },
+    {
+      "name": "Interactable Cabinet 2",
+      "type": "dialogue",
+      "dialogue": [
+        "These clothes belong to your mom."
+      ]
+    },
+    {
+      "name": "Interactable Cabinet 3",
+      "type": "dialogue",
+      "dialogue": [
+        "These are your clothes."
+      ]
+    },
+    {
+      "name": "Interactable Cabinet 4",
+      "type": "dialogue",
+      "dialogue": [
+        "These clothes belong to your dad. Some of your old clothes are here, too."
+      ]
+    },
+    {
+      "name": "Interactable Bed 1",
+      "type": "dialogue",
+      "dialogue": [
+        "You consider taking a nap, but you avoid the temptation."
+      ]
+    },
+    {
+      "name": "Interactable Clock",
+      "type": "dialogue",
+      "dialogue": [
+        "It's a very old clock."
+      ]
+    },
+    {
+      "name": "Interactable Kitchenette",
+      "type": "dialogue",
+      "dialogue": [
+        "Your mom makes delicious meals here."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Interface.Behaviors.Behavior
+
+class Animation
+    public ImageSheet sheet
+    public Drawable sprite1
+    public Drawable sprite2
+    public Drawable sprite3
+
+    integer frame = 1
+    number xPos = 0
+    number yPos = 0
+    number secs = 0
+    number fps = 6
+
+    action GetFrame returns integer
+        return frame
+    end 
+
+    action GetFPS returns number
+        return fps
+    end
+    action SetFrame(integer frame)
+        me:frame = frame
+    end
+
+    action LoadImageSheet(text imgSheet)
+        sheet:Load("Assets/ImageSheets/" + imgSheet +".atlas")
+    end 
+
+    action LoadImage(text img)
+        sprite2:Load("Assets/Sprites/" + img + ".png")
+    end
+
+    action LoadFrame(text frameImg)
+        sprite1:Load(sheet:GetDrawable(frameImg + " frame 1"))
+    end
+
+    action ChangeFrame(text frameImg)
+        if frame > 8
+            frame = 1
+        end
+        sprite1:Load(sheet:GetDrawable(frameImg + " frame " + frame)) 
+    end
+
+    action LoadFrame2(text frameImg)
+        sprite1:Load(sheet:GetDrawable(frameImg + " frame " + frame))
+    end
+
+    action ChangeFrames(text frameImg, text direction)
+        if direction = "up"
+            if frame > 12 or frame < 10
+                frame = 10
+            end
+        elseif direction = "down"
+            if frame > 3
+                frame = 1
+            end
+
+        elseif direction = "left"
+            if frame > 6 or frame < 4
+                frame = 4
+            end
+        elseif direction = "right"
+            if frame > 9 or frame < 7
+                frame = 7
+            end
+        elseif direction = ""
+            frame = frame - 1
+        end
+
+        sprite1:Load(sheet:GetDrawable(frameImg + " frame " + frame)) 
+    end
+
+    /*action FireSpell
+        if frame > 3
+            frame = 1
+        end
+        sprite1:Load(sheet:GetDrawable("Fireball frame " + frame))
+    end*/
+end

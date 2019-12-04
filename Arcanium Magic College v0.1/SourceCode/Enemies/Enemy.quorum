@@ -1,0 +1,91 @@
+use Libraries.Containers.Array
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+
+class Enemy is Combatant
+
+    integer itemUseCount = 0        //total # of times items can be used, if the enemy has any
+    boolean targetForHeal = false   //whether another enemy is already planning to heal target
+    Array<integer> attackCooldowns  //array of # of turns needed before an attack can be used again
+
+    /*Parse through the JSON to find an enemy with the given name and 
+    use that information to fill out the enemy's fields*/    
+    action FillEnemy(text name)
+        SetName(name)
+        JavaScriptObjectNotation enemies
+        File enemiesList
+        enemiesList:SetPath("Assets\EnemyTypes\Enemies.json")
+        enemies:Read(enemiesList)
+        JavaScriptObjectNotation enemyData = enemies:GetObject("enemies")
+
+        JavaScriptObjectNotation currentEnemy
+        integer i = 0
+        boolean found = false
+        repeat while (i < enemyData:GetSize() and not found)
+            currentEnemy = enemyData:Get(i)
+            if (currentEnemy:GetValue("name") = GetName())
+                found = true
+            else
+                i = i + 1
+            end
+        end
+
+        if (not found)
+            output "Temporary Error: enemy not found"
+        else
+            SetCurrentHP(currentEnemy:GetValue("currentHP"):ParseInteger())
+            SetMaxHP(currentEnemy:GetValue("maxHP"):ParseInteger())
+            SetExperienceValue(currentEnemy:GetValue("experienceValue"):ParseInteger())
+            SetLevel(currentEnemy:GetValue("level"):ParseInteger())
+            SetCurrentAttack(currentEnemy:GetValue("currentAttack"):ParseNumber())
+            SetItemUseCount(currentEnemy:GetValue("itemUseCount"):ParseInteger())
+
+            enemyData = currentEnemy:GetObject("currentElementsEffectiveness")
+            i = 0
+            repeat while (i < enemyData:GetSize())
+                SetCurrentElementsEffectivenessAtPosition(i, 
+                 enemyData:Get(i):GetValue():ParseNumber())
+                i = i + 1
+            end
+
+            enemyData = currentEnemy:GetObject("attackCooldowns")
+            i = 0
+            repeat while (i < enemyData:GetSize())
+                AddToAttackCooldowns(enemyData:Get(i):GetValue():ParseInteger())
+                i = i + 1
+            end
+        end
+    end
+
+/*******************************************************************************
+                    Getters and Setters Below This Point
+*******************************************************************************/
+
+    action SetItemUseCount(integer newItemUseCount)
+        itemUseCount = newItemUseCount
+    end
+
+    action GetItemUseCount() returns integer
+        return itemUseCount
+    end
+
+    action SetTargetForHeal(boolean newTargetForHeal)
+        targetForHeal = newTargetForHeal
+    end
+
+    action GetTargetForHeal() returns boolean
+        return targetForHeal
+    end
+
+    action SetAttackCooldownsAtPosition(integer position, integer newAttackCooldown)
+        attackCooldowns:Set(position, newAttackCooldown)
+    end
+
+    action GetAttackCooldownsAtPosition(integer position) returns integer
+        return attackCooldowns:Get(position)
+    end
+
+    action AddToAttackCooldowns(integer newAttackCooldown)
+        attackCooldowns:Add(newAttackCooldown)
+    end
+end

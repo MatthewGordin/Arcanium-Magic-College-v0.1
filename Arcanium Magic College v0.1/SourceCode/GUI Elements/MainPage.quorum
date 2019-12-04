@@ -1,0 +1,12 @@
+class MainPage 
+    
+    private boolean finished = false
+
+    action SetFinished
+        finished = true
+    end
+
+    action GetFinished returns boolean
+        return finished
+    end
+end

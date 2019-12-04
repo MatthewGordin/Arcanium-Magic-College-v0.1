@@ -1,0 +1,52 @@
+{
+  "interactables": [
+    {
+      "name": "Jewel 1",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel a sudden surge of light enter your body."
+      ]
+    },
+    {
+      "name": "Jewel 2",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel a sudden surge of darkness build up within you."
+      ]
+    },
+    {
+      "name": "Jewel 3",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel the might of earth tremble within you."
+      ]
+    },
+    {
+      "name": "Jewel 4",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel the rush of water torrent within you."
+      ]
+    },
+    {
+      "name": "Jewel 5",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel an inferno build up within you."
+      ]
+    },
+    {
+      "name": "Jewel 6",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "By interacting with the jewel on this pedestal, you feel a strong breeze well up inside you."
+      ]
+    }
+  ]
+}

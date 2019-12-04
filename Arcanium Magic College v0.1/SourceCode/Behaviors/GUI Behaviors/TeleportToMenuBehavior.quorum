@@ -1,0 +1,151 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Game
+use Libraries.Interface.Layouts.ManualLayout
+use Libraries.Game.GameStateManager
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Label
+
+class TeleportToMenuBehavior is Behavior
+    
+    Game game
+    Player player
+    Map currentMap
+    Array<Item2D> removalArray
+    Array<MenuButton> buttons
+    Drawable background
+    Label label
+    boolean finished = false
+
+    action Run(BehaviorEvent event)
+
+        ManualLayout layout
+        game:SetLayout(layout)
+
+        integer positionX = cast(integer, game:GetCamera2D():GetPosition():GetX() - game:GetCamera2D():GetWidth()/2 + 85)
+        integer positionY = cast(integer, game:GetCamera2D():GetPosition():GetY() - game:GetCamera2D():GetHeight()/2 + 500)
+
+        background:Load("Assets/Sprites/info-box.png")
+        background:SetPosition(game:GetCamera2D():GetPosition():GetX() - game:GetCamera2D():GetWidth()/2 - 75, game:GetCamera2D():GetPosition():GetY() - game:GetCamera2D():GetHeight()/2 - 150)
+        background:Scale(8, 16)
+        game:Add(background)
+
+        label:SetText("Teleport-To Menu")
+        label:SetFontSize(30)
+        label:SetPosition(positionX - 60, positionY + 40)
+        game:Add(label)
+
+        JavaScriptObjectNotation mapData
+        File data
+
+        data:SetPath("Assets\Maps\Data\" + currentMap:name  + ".json")
+        if (data:Exists())
+            mapData:Read(data)
+            JavaScriptObjectNotation poiData = mapData:GetObject("pointsofinterest")
+
+            integer i = 0
+            repeat while (i < poiData:GetSize())
+                text name    = poiData:Get(i):GetValue("name")
+                integer newX = cast(integer, poiData:Get(i):GetValue("x"))
+                integer newY = cast(integer, poiData:Get(i):GetValue("y"))
+
+                MenuButton interestPointButton
+                FillButton(interestPointButton, positionX, positionY, name)
+                interestPointButton:SetDescription("Teleports the player to the " + name)
+
+                TeleportBehavior behavior
+                behavior:SetGame(game)
+                behavior:SetPlayer(player)
+                behavior:SetMenu(me)
+                behavior:SetX(newX)
+                behavior:SetY(newY)
+                behavior:SetCurrentMap(currentMap)
+
+                interestPointButton:SetBehavior(behavior)
+                buttons:Add(interestPointButton)
+
+                positionY = positionY - 50
+
+                i = i + 1
+            end
+        end
+
+        MenuButton exitButton
+        FillButton(exitButton, positionX, cast(integer, game:GetCamera2D():GetPosition():GetY() - game:GetCamera2D():GetHeight()/2 + 50), "Exit")
+        buttons:Add(exitButton)
+
+        TeleportBehavior backBehavior
+        backBehavior:SetPlayer(player)
+        backBehavior:SetMenu(me)
+        backBehavior:SetExit(true)
+        exitButton:SetBehavior(backBehavior)
+
+        i = 0
+        repeat while (i < buttons:GetSize())
+            if (i = (buttons:GetSize() - 1))
+                buttons:Get(i):SetNextFocus(buttons:Get(0))
+            else
+                buttons:Get(i):SetNextFocus(buttons:Get(i + 1))
+            end
+
+            if (i = 0)
+                buttons:Get(i):SetPreviousFocus(buttons:Get(buttons:GetSize() - 1))
+            else
+                buttons:Get(i):SetPreviousFocus(buttons:Get(i - 1))
+            end
+            i = i + 1
+        end
+
+        game:SetFocus(buttons:Get(0))
+    end
+
+    action FillButton(MenuButton button, integer positionX, integer positionY, 
+     text name)
+        button:SetGame(game)
+        button:SetRemovalArray(removalArray)
+        button:SetPosition(positionX, positionY)
+        button:SetName(name)
+        button:SetPretty(true)
+        button:SetHorizontal(true)
+        button:SetTarget(button)
+        game:Add(button)
+    end
+
+    action Dispose()
+        integer counter = 0
+
+        repeat while counter < buttons:GetSize()
+            buttons:Get(counter):Dispose()
+            removalArray:Add(buttons:Get(counter))
+
+            counter = counter + 1
+        end
+    
+        removalArray:Add(background)
+        removalArray:Add(label)
+
+        GameStateManager manager
+        Main main = cast(Main, manager:GetGame())
+        main:lockMovement = false
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetPlayer(Player newPlayer)
+        player = newPlayer
+    end
+
+    action SetCurrentMap(Map newMap)
+        currentMap = newMap
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+end

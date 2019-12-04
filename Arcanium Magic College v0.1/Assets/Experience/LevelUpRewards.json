@@ -1,0 +1,124 @@
+{
+  "Levels": [
+    {
+      "healthIncrease": 0,
+      "manaIncrease": 0,
+      "expToNextLevel": 100,
+      "currentAttackMultiplier": 1.0
+    },
+    {
+      "healthIncrease": 25,
+      "manaIncrease": 1,
+      "expToNextLevel": 250,
+      "currentAttackMultiplier": 1.0
+    },
+    {
+      "healthIncrease": 50,
+      "manaIncrease": 1,
+      "expToNextLevel": 500,
+      "currentAttackMultiplier": 1.05
+    },
+    {
+      "healthIncrease": 125,
+      "manaIncrease": 2,
+      "expToNextLevel": 800,
+      "currentAttackMultiplier": 1.05
+    },
+    {
+      "healthIncrease": 75,
+      "manaIncrease": 3,
+      "expToNextLevel": 1200,
+      "currentAttackMultiplier": 1.0
+    },
+    {
+      "healthIncrease": 100,
+      "manaIncrease": 3,
+      "expToNextLevel": 1750,
+      "currentAttackMultiplier": 1.05
+    },
+    {
+      "healthIncrease": 150,
+      "manaIncrease": 4,
+      "expToNextLevel": 2000,
+      "currentAttackMultiplier": 1.0
+    },
+    {
+      "healthIncrease": 150,
+      "manaIncrease": 4,
+      "expToNextLevel": 2450,
+      "currentAttackMultiplier": 1.07
+    },
+    {
+      "healthIncrease": 250,
+      "manaIncrease": 4,
+      "expToNextLevel": 3000,
+      "currentAttackMultiplier": 1.05
+    },
+    {
+      "healthIncrease": 300,
+      "manaIncrease": 4,
+      "expToNextLevel": 3600,
+      "currentAttackMultiplier": 1.07
+    },
+    {
+      "healthIncrease": 400,
+      "manaIncrease": 5,
+      "expToNextLevel": 4200,
+      "currentAttackMultiplier": 1.07
+    },
+    {
+      "healthIncrease": 400,
+      "manaIncrease": 5,
+      "expToNextLevel": 5000,
+      "currentAttackMultiplier": 1.1
+    },
+    {
+      "healthIncrease": 500,
+      "manaIncrease": 5,
+      "expToNextLevel": 6000,
+      "currentAttackMultiplier": 1.1
+    },
+    {
+      "healthIncrease": 500,
+      "manaIncrease": 6,
+      "expToNextLevel": 7000,
+      "currentAttackMultiplier": 1.07
+    },
+    {
+      "healthIncrease": 550,
+      "manaIncrease": 6,
+      "expToNextLevel": 8500,
+      "currentAttackMultiplier": 1.1
+    },
+    {
+      "healthIncrease": 600,
+      "manaIncrease": 6,
+      "expToNextLevel": 10000,
+      "currentAttackMultiplier": 1.15
+    },
+    {
+      "healthIncrease": 700,
+      "manaIncrease": 7,
+      "expToNextLevel": 12000,
+      "currentAttackMultiplier": 1.15
+    },
+    {
+      "healthIncrease": 800,
+      "manaIncrease": 8,
+      "expToNextLevel": 15000,
+      "currentAttackMultiplier": 1.1
+    },
+    {
+      "healthIncrease": 900,
+      "manaIncrease": 9,
+      "expToNextLevel": 20000,
+      "currentAttackMultiplier": 1.2
+    },
+    {
+      "healthIncrease": 1000,
+      "manaIncrease": 10,
+      "expToNextLevel": -1,
+      "currentAttackMultiplier": 1.25
+    }
+  ]
+}

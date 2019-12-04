@@ -1,0 +1,151 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Game
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Interface.Controls.Button
+use Libraries.Game.Graphics.Label
+
+class CombatRemoveTokenBehavior is Behavior
+    
+    Game game
+    Battle battle
+    Array<CombatAddTokenBehavior> otherBehaviors
+    Array<Drawable> tokenDrawables
+    Array<Label> labels
+    Array<MenuButton> buttons
+    MenuButton backButton
+    integer currentTokens = 0
+    integer spellID = 0
+    integer elementID = 0
+
+    constant integer fire = 100000
+    constant integer water = 10000
+    constant integer earth = 1000
+    constant integer wind = 100
+    constant integer light = 10
+    constant integer dark = 1
+
+    action Run(BehaviorEvent event)
+        Color color
+
+        if currentTokens > 0
+            currentTokens = currentTokens - 1
+
+            if currentTokens = 0
+                spellID = 9000000
+            else
+                spellID = spellID - elementID
+            end
+
+            tokenDrawables:Get(currentTokens):LoadFilledCircle(20, color:White())
+
+            integer counter = 0
+
+            repeat while counter < otherBehaviors:GetSize()
+                otherBehaviors:Get(counter):SetSpellID(spellID)
+                otherBehaviors:Get(counter):SetCurrentTokens(currentTokens)
+
+                counter = counter + 1
+            end
+
+            if spellID not= 9000000
+                Spell tempSpell
+                tempSpell:FillSpell(spellID)
+
+                text multiTarget = ""
+                if tempSpell:GetMultiTarget()
+                    multiTarget = "Yes"
+                else
+                    multiTarget = "No"
+                end
+
+                counter = 0
+                repeat while counter < buttons:GetSize()
+                    buttons:Get(counter):SetName("Current Spell:, Name: " + tempSpell:GetName() + ", Base Damage: " + tempSpell:GetBaseDamage() 
+                                        + ", Mana Cost: " + tempSpell:GetManaCost() + ", Multi-target: " + multiTarget + ".")
+
+                    counter = counter + 1
+                end
+
+                labels:Get(0):SetText("Name: " + tempSpell:GetName())
+                labels:Get(1):SetText("Base Damage: " + tempSpell:GetBaseDamage())
+                labels:Get(2):SetText("Mana Cost: " + tempSpell:GetManaCost())
+                labels:Get(3):SetText("Multi-target: " + multiTarget)
+            else
+                counter = 0
+                repeat while counter < buttons:GetSize()
+                    buttons:Get(counter):SetName("Current Spell: No spell selected.")
+
+                    counter = counter + 1
+                end
+
+                labels:Get(0):SetText("Name: N/A")
+                labels:Get(1):SetText("Base Damage: N/A")
+                labels:Get(2):SetText("Mana Cost: N/A")
+                labels:Get(3):SetText("Multi-target: N/A")
+            end
+        else
+            spellID = 9000000
+            currentTokens = 0
+
+            integer counter = 0
+
+            repeat while counter < otherBehaviors:GetSize()
+                otherBehaviors:Get(counter):SetSpellID(spellID)
+                otherBehaviors:Get(counter):SetCurrentTokens(currentTokens)
+
+                counter = counter + 1
+            end
+
+            labels:Get(0):SetText("Name: N/A")
+            labels:Get(1):SetText("Base Damage: N/A")
+            labels:Get(2):SetText("Mana Cost: N/A")
+            labels:Get(3):SetText("Multi-target: N/A")
+
+            backButton:Activate()
+        end
+    end
+
+    action SetBackButton(MenuButton button)
+        backButton = button
+    end
+
+    action SetButtons(Array<MenuButton> newButtons)
+        buttons = newButtons
+    end
+
+    action SetElementID(integer newID)
+        elementID = newID
+    end
+
+    action SetSpellID(integer newID)
+        spellID = newID
+    end
+
+    action GetSpellID returns integer
+        return spellID
+    end
+
+    action SetMaxTokens(integer newMax)
+        maxTokens = newMax
+    end
+
+    action SetCurrentTokens(integer newTokens)
+        currentTokens = newTokens
+    end
+
+    action SetTokenDrawables(Array<Drawable> newArray)
+        tokenDrawables = newArray
+    end
+
+    action SetOtherBehaviors(Array<CombatAddTokenBehavior> newArray)
+        otherBehaviors = newArray
+    end
+
+    action SetLabels(Array<Label> newArray)
+        labels = newArray
+    end
+end

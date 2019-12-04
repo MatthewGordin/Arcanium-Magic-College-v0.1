@@ -1,0 +1,53 @@
+{
+  "interactables": [
+    {
+      "name": "Interactable Door 2",
+      "type": "dialogue",
+      "dialogue": [
+        "It's locked."
+      ]
+    },
+    {
+      "name": "Interactable Door 3",
+      "type": "dialogue",
+      "dialogue": [
+        "It's locked."
+      ]
+    },
+    {
+      "name": "Interactable Fountain",
+      "type": "dialogue",
+      "dialogue": [
+        "The fountain is broken and no longer functional."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 1",
+      "type": "dialogue",
+      "dialogue": [
+        "There's nothing in the grave."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 2",
+      "type": "dialogue",
+      "dialogue": [
+        "This grave seems to have been dug up."
+      ]
+    },
+    {
+      "name": "Interactable Gravestone 3",
+      "type": "dialogue",
+      "dialogue": [
+        "Who would do such a thing?"
+      ]
+    },
+    {
+      "name": "Interactable House Door",
+      "type": "dialogue",
+      "dialogue": [
+        "The door is stuck in its frame. It seems that someone tried to open it by force."
+      ]
+    }
+  ]
+}

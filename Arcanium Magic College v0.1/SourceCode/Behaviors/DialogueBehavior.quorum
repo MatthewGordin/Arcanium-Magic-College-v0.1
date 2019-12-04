@@ -1,0 +1,45 @@
+/**********************************************************
+  Class for any Dialogue
+  Inherits from Behavior for modularity
+
+  Add new TEXT with AddDialogue()
+  Display next TEXT with Run()
+**********************************************************/
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+
+class DialogueBehavior is Behavior
+    // List of DIALOGUE and INDEX of list
+    Array<text> dialogue
+    integer currentDialogue = 0
+
+    // General action called when BEHAVIOR is triggered
+    action Run(BehaviorEvent event)
+        integer i = dialogue:GetSize()
+
+        // If end of dialogue, say nothing ("...")
+        if i = 0 or currentDialogue >= i
+            i = 0
+            output "..."
+        else
+
+        // Go to next dialogue before return
+        currentDialogue = currentDialogue + 1
+
+        // Give pre-increment dialogue
+        output dialogue:Get(currentDialogue - 1)
+        end
+    end
+
+    // Adds a new line to the dialogue list
+    action AddDialogue(text newDialogue)
+        output newDialogue
+        dialogue:Add(newDialogue)
+    end
+
+    // Resets index of list
+    action ResetDialogue()
+        currentDialogue = 0
+    end
+end

@@ -1,0 +1,13 @@
+{
+    "interactables": [
+        {
+            "name": "Interactable Log Pile 1",
+            "type": "dialogue",
+            "required": "true",
+            "dialogue": [
+                "A pile of logs taller than you block the path ahead.",
+                "You use Air Slash to clear the way"
+            ]
+        }
+    ]
+}

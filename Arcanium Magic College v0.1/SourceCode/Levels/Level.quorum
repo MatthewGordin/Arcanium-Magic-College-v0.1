@@ -1,0 +1,21 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+
+class Level 
+
+    Game game
+    Drawable background
+
+    on create
+        //background:Load("")
+    end
+
+    action LoadLevel
+        //game:ClearLevel()         //will clear the current level (not yet implemented)
+        //game:Add(background)
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+end

@@ -1,0 +1,91 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Game
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Camera
+
+class CombatEnemyTurnBehavior is Behavior
+    
+    Game game
+    Battle battle
+    BehaviorQueue behaviorQueue
+    Camera camera = undefined
+    Array<Item2D> removalArray
+    Array<Combatant> combatants
+    boolean finished = false
+    Array<boolean> flags
+
+    action SetFlags(Array<boolean> newArray)
+        flags = newArray
+    end
+
+    action Run(BehaviorEvent event)
+        if not flags:Get(0)
+        Array<text> emptyArray
+
+        integer counter = 1
+        repeat while counter < combatants:GetSize()
+            if (combatants:Get(counter) not= undefined)
+                Enemy enemy = cast(Enemy, combatants:Get(counter))
+                enemy:SetTargetForHeal(false)
+            end
+            counter = counter + 1
+        end
+
+        counter = 1
+        repeat while counter < combatants:GetSize()
+            CombatEnemyActionBehavior behavior
+            behavior:SetGame(game)
+            behavior:SetRemovalArray(removalArray)
+            behavior:SetBehaviorQueue(behaviorQueue)
+            behavior:SetCamera(camera)
+            behavior:SetCombatants(combatants)
+            behavior:SetEnemyIndex(counter)
+            behavior:SetPreviousBehavior(me)
+            behavior:Run(undefined)
+
+            counter = counter + 1
+        end
+        end
+    end
+    
+    action Dispose      
+        CombatUpdateEffectsBehavior behavior
+        behavior:SetCombatants(combatants)
+        behavior:SetBattle(battle)
+        behaviorQueue:AddBehavior(behavior)
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetFinished(boolean newBoolean)
+        finished = newBoolean
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newQueue)
+        behaviorQueue = newQueue
+    end
+
+    action SetCombatants(Array<Combatant> newArray)
+        combatants = newArray
+    end
+end

@@ -1,0 +1,75 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Game
+use Libraries.Containers.Array
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Camera
+
+class CombatPassTurnBehavior is Behavior
+
+    Game game
+    Camera camera = undefined
+    Battle battle
+    Array<Item2D> removalArray
+    BehaviorQueue behaviorQueue
+    CombatMainPageBehavior mainPage
+
+    action Run(BehaviorEvent event)
+        Player player = cast(Player, battle:GetPlayer())
+
+        if player:GetCurrentMP() not= player:GetMaxMP()
+            player:SetCurrentMP(player:GetCurrentMP() + 1)
+            battle:UpdateStatus()
+
+            Array<text> log
+            log:Add(player:GetName() + " concentrated to replenish mana!")
+            
+            DisplayLogBehavior logBehavior
+            logBehavior:SetGame(game)
+            logBehavior:SetLog(log)
+            logBehavior:SetRemovalArray(removalArray)
+            logBehavior:SetCamera(camera)
+            behaviorQueue:AddBehavior(logBehavior)
+
+            battle:EnemyTurn()
+        else
+            Array<text> log
+            log:Add(player:GetName() + " cannot replenish more mana!")   
+     
+            DisplayLogBehavior logBehavior
+            logBehavior:SetGame(game)
+            logBehavior:SetLog(log)
+            logBehavior:SetRemovalArray(removalArray)
+            logBehavior:SetCamera(camera)
+            behaviorQueue:AddBehavior(logBehavior)
+
+            battle:PlayerTurn()
+        end
+
+        mainPage:SetFinished(true)
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newBehaviorQueue)
+        behaviorQueue = newBehaviorQueue
+    end
+
+    action SetMainPageBehavior(CombatMainPageBehavior newPage)
+        mainPage = newPage
+    end
+end

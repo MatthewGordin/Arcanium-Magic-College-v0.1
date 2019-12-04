@@ -1,0 +1,353 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Game
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Color
+use Libraries.Game.GameStateManager
+
+
+class Map 
+    public Drawable map
+    public Drawable aboveLayer
+    public Array<Drawable> collisions
+    public Array<Interactable> interactables
+    public Array<InteractableData> interactableData
+    public Array<Boolean> completedInteractables
+    public Array<Interactable> transitions
+    public Array<Text> aboveMaps
+    public text name = ""
+
+    MapList maps
+
+    GameStateManager manager            // Used to get MAIN
+
+    on create
+        setAboveMaps()
+    end
+
+    action setAboveMaps() 
+        aboveMaps:Add(maps:FOREST_MAP)
+        aboveMaps:Add(maps:LIBRARY_MAP)
+        aboveMaps:Add(maps:FOREST_CLEARING_MAP)
+        aboveMaps:Add(maps:FOREST_PATH_1_MAP)
+        aboveMaps:Add(maps:FOREST_PATH_3_MAP)
+        aboveMaps:Add(maps:FOREST_PATH_4_MAP)
+        aboveMaps:Add(maps:FOREST_PATH_1_MAP_COMPLETE)
+        aboveMaps:Add(maps:FOREST_PATH_3_MAP_COMPLETE)
+        aboveMaps:Add(maps:FOREST_PATH_4_MAP_HALF_COMPLETE)
+        aboveMaps:Add(maps:FOREST_PATH_4_MAP_COMPLETE)
+        aboveMaps:Add(maps:PROLOGUE_TOWN_MAP)
+        aboveMaps:Add(maps:RUINED_TOWN_MAP)
+    end
+
+    action inAboveMaps(text map) returns boolean
+        if aboveMaps:Has(map) 
+            return true
+        end
+
+        return false
+    end
+
+    action loadMap(text mapText)
+        map:Load("Assets\Maps\" + mapText + ".png")     
+        name = mapText
+    end
+
+    /*
+    This function is intended to load a single layer 
+    NOTE: For this function to work properly, you must do the following:
+        1. When exporting your map in Tiled as PNG, export it at its actual size, NOT at the zoomed level.
+        2. Export a map that is of the same name as its base map (so the above layer for the Forest Map would be ForestAbove)
+    */
+    action loadAboveLayer(text map)
+        File filePath
+        filePath:SetPath("Assets\Maps\" + map + "Above.png")
+        if (filePath:Exists())
+            aboveLayer:Load("Assets\Maps\" + map + "Above.png")
+        end
+end
+
+    /*
+    This function is intended to gather all objects that will transition the player to a new map
+
+    NOTE: For this function to work properly, you must do the following:
+        1. When exporting your map in Tiled as PNG, export it at its actual size, NOT at the zoomed level.
+        2. You MUST have a separate layer named "Transitions" that contains all of your collision objects.
+    */
+    action loadMapTransitions(text mapText) 
+        JavaScriptObjectNotation mapData
+        File data
+        data:SetPath("Assets\Maps\Data\" + mapText  + ".json")
+        if (data:Exists())
+            mapData:Read(data)
+
+            JavaScriptObjectNotation layersData = mapData:GetObject("layers")
+            JavaScriptObjectNotation transitionsLayer
+
+            // this is used for resetting the origin to top-left because Quorum's origin is bottom-left while Tiled's is top-left
+            number tileSize = cast(number, mapData:GetValue("tileheight"))
+            number mapY = cast(number, layersData:Get(0):GetValue("height")) * tileSize
+            number mapX = cast(number, layersData:Get(0):GetValue("width")) * tileSize
+
+            i = 0
+            repeat layersData:GetSize() times
+                JavaScriptObjectNotation curr = layersData:Get(i)
+                if curr:GetValue("name") = "Transitions"
+                    transitionsLayer = layersData:Get(i)
+                end
+                i = i + 1
+            end
+
+            JavaScriptObjectNotation transitionsObjects = transitionsLayer:GetObject("objects")
+
+            Main main = cast(Main, manager:GetGame())
+
+            i = 0
+            repeat transitionsObjects:GetSize() times
+                JavaScriptObjectNotation curr = transitionsObjects:Get(i)
+
+                // get the values from the collision object
+                number x = cast(number, curr:GetValue("x"))
+                number y = cast(number, curr:GetValue("y"))
+
+                number numHeight = cast(number, curr:GetValue("height"))
+                number numWidth = cast(number, curr:GetValue("width"))
+                integer height = cast(integer, numHeight)
+                integer width = cast(integer, numWidth)
+                text name = curr:GetValue("name")
+
+                number rotation = cast(number, curr:GetValue("rotation")) 
+
+                Interactable transition
+                Color color
+
+                // save the value of each collision object's x, y, height, and width
+//                transition:SetPosition(x, mapY - y - height)
+//                transition:LoadRectangle(width, height)
+//              
+//                transition:SetColor(color:Clear())
+//                
+//                transition:SetRotation(rotation)
+//                transition:SetName(name)
+//                transition:EnablePhysics(true)
+
+// ==== Ryan: Starting Changes ====
+                transition:CreateInteractable(name, "clear", width, height, x, (mapY - y - height), false)
+                transition:CreateMapTransitionBehavior(main:GetMap(), name, 0, 0, "")
+// ===== Ryan: Ending Changes =====
+
+                transitions:Add(transition)
+                i = i + 1
+            end
+
+        end
+    end
+
+    /*
+    This function will work for any objects that the user can press *ENTER* to interact with.
+    DOES NOT INCLUDE map transitions
+
+    NOTE: For this function to work properly, you must do the following:
+        1. When exporting your map in Tiled as PNG, export it at its actual size, NOT at the zoomed level.
+        2. You MUST have a separate layer named "Interactables" that contains all of your collision objects.
+    */
+    action loadInteractables(text mapText) 
+        JavaScriptObjectNotation mapData
+        File data
+        data:SetPath("Assets\Maps\Data\" + mapText  + ".json")
+        if (data:Exists())
+            mapData:Read(data)
+
+            JavaScriptObjectNotation layersData = mapData:GetObject("layers")
+            JavaScriptObjectNotation interactablesLayer
+
+            // this is used for resetting the origin to top-left because Quorum's origin is bottom-left while Tiled's is top-left
+            number tileSize = cast(number, mapData:GetValue("tileheight"))
+            number mapY = cast(number, layersData:Get(0):GetValue("height")) * tileSize
+            number mapX = cast(number, layersData:Get(0):GetValue("width")) * tileSize
+
+            i = 0
+            repeat layersData:GetSize() times
+                JavaScriptObjectNotation curr = layersData:Get(i)
+                if curr:GetValue("name") = "Interactables"
+                    interactablesLayer = layersData:Get(i)
+                end
+                i = i + 1
+            end
+
+            JavaScriptObjectNotation interactablesObjects = interactablesLayer:GetObject("objects")
+
+            i = 0
+            repeat interactablesObjects:GetSize() times
+                JavaScriptObjectNotation curr = interactablesObjects:Get(i)
+
+                // get the values from the collision object
+                number x = cast(number, curr:GetValue("x"))
+                number y = cast(number, curr:GetValue("y"))
+
+                number numHeight = cast(number, curr:GetValue("height"))
+                number numWidth = cast(number, curr:GetValue("width"))
+                integer height = cast(integer, numHeight)
+                integer width = cast(integer, numWidth)
+                text name = curr:GetValue("name")
+
+                number rotation = cast(number, curr:GetValue("rotation")) 
+
+                Interactable interactable
+                Color color
+
+                // save the value of each collision object's x, y, height, and width
+//                interactable:SetPosition(x, mapY - y - height)
+//                interactable:LoadRectangle(width, height)
+//              
+//                interactable:SetColor(color:Clear())
+//                
+//                interactable:SetRotation(rotation)
+//                interactable:SetName(name)
+//                interactable:EnablePhysics(true)
+
+// ==== Ryan: Starting Changes ====
+                interactable:CreateInteractable(name, "clear", width, height, x, (mapY - y - height), true)
+// ===== Ryan: Ending Changes =====
+
+                interactables:Add(interactable)
+                i = i + 1
+            end
+            
+        end
+    end
+
+    /*
+        This function will grab the data for the interactables based on a JSON file, specifically for dialogue behaviors
+        NOTE: This Interactables data JSON will be hard-coded ourselves, and not through Tiled
+        JSON layout: an object will represent one interactable
+            each interactable will have the following properties -> type: dialogue (text) and dialogue: (array of dialog strings)
+    */
+    action getInteractablesData(text mapText) 
+        JavaScriptObjectNotation mapData
+        File data
+        data:SetPath("Assets\Maps\Data\" + mapText  + "Interactables.json")
+        if (data:Exists())
+
+            mapData:Read(data)
+
+            JavaScriptObjectNotation interDataJSON = mapData:GetObject("interactables")
+
+
+            i = 0
+            repeat interDataJSON:GetSize() times
+                JavaScriptObjectNotation curr = interDataJSON:Get(i)
+                
+                text required = curr:GetValue("required")
+            
+                if required = "true" // if an interactable is required to be complete, then set its completed to false
+                    completedInteractables:Add(false)
+                else 
+                    completedInteractables:Add(true)
+                end
+            
+                text dial = curr:GetValue("dialogue") // gets the dialogue object and turns it into a string
+                dial = dial:GetSubtext(1, dial:GetSize() - 1) // trims off the double quotes
+                text dq = ""
+                dq = dq:GetDoubleQuote()
+                Array<text> allDialogue = dial:Split(dq + ",") // splits based on a double quote followed by a comma
+                Array<Text> d // used for converting the dialog to a text
+
+                j = 0
+                repeat allDialogue:GetSize() times // parses the JSON object containing the text
+                    text currText = allDialogue:Get(j)
+                    currText = currText:Replace(dq, "") // removes the double quote from the text
+                    d:Add(currText) // adds it to d
+                    j = j + 1
+                end
+
+                InteractableData temp // creates a temp interactableData to add to our public array of interactableData
+                temp:SetInteractableData(curr:GetValue("name"), curr:GetValue("type"), d) // sets values
+                interactableData:Add(temp)
+
+// ==== Ryan: Starting Changes ====
+                boolean interactableDialogueSet = false
+                j = 0
+                repeat interactables:GetSize() times
+                    if interactables:Get(j):GetInteractableName() = temp:name
+                        interactableDialogueSet = true
+                        interactables:Get(j):CreateDialogueBehavior(temp)
+                    end
+                    j = j + 1
+                end
+                if not interactableDialogueSet
+                    output "Error: Interactable of name '" + temp:name + "' does not exist"
+                end
+// ===== Ryan: Ending Changes =====
+
+                i = i + 1
+            end
+            
+        end
+    end
+
+    /*
+    NOTE: For this function to work properly, you must do the following:
+        1. When exporting your map in Tiled as PNG, export it at its actual size, NOT at the zoomed level.
+        2. You MUST have a separate layer named "Collision" that contains all of your collision objects.
+    */
+    action loadCollisionLayer(text mapText) 
+        JavaScriptObjectNotation mapData
+        File data
+        data:SetPath("Assets\Maps\Data\" + mapText  + ".json")
+        mapData:Read(data)
+
+        JavaScriptObjectNotation layersData = mapData:GetObject("layers")
+        JavaScriptObjectNotation collisionLayer
+
+        // this is used for resetting the origin to top-left because Quorum's origin is bottom-left while Tiled's is top-left
+        number tileSize = cast(number, mapData:GetValue("tileheight"))
+        number mapY = cast(number, layersData:Get(0):GetValue("height")) * tileSize
+        number mapX = cast(number, layersData:Get(0):GetValue("width")) * tileSize
+
+        i = 0
+        repeat layersData:GetSize() times
+            JavaScriptObjectNotation curr = layersData:Get(i)
+            if curr:GetValue("name") = "Collision"
+                collisionLayer = layersData:Get(i)
+            end
+            i = i + 1
+        end
+
+        JavaScriptObjectNotation collisionObjects = collisionLayer:GetObject("objects")
+
+        i = 0
+        repeat collisionObjects:GetSize() times
+            JavaScriptObjectNotation curr = collisionObjects:Get(i)
+
+            // get the values from the collision object
+            number x = cast(number, curr:GetValue("x"))
+            number y = cast(number, curr:GetValue("y"))
+
+            number numHeight = cast(number, curr:GetValue("height"))
+            number numWidth = cast(number, curr:GetValue("width"))
+            integer height = cast(integer, numHeight)
+            integer width = cast(integer, numWidth)
+            text name = curr:GetValue("name")
+
+            number rotation = cast(number, curr:GetValue("rotation")) 
+
+            Drawable collision
+            Color color
+            
+            // save the value of each collision object's x, y, height, and width
+            collision:SetPosition(x, mapY - y - height)
+            collision:LoadRectangle(width, height)
+          
+            collision:SetColor(color:Clear())
+            
+            collision:SetRotation(rotation)
+            collision:SetName(name)
+            collision:EnablePhysics(true)
+
+            collisions:Add(collision)
+            i = i + 1
+        end
+    end
+end

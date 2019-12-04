@@ -1,0 +1,567 @@
+use Libraries.Containers.Array
+use Libraries.Containers.Iterator
+use Libraries.Compute.Random
+use Libraries.Game.Game
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.GameStateManager
+
+class Combatant
+
+    text name = ""          //name to display
+    integer currentHP = 1   //current health
+    integer maxHP = 1       //maximum amount of health
+    integer experienceValue = 1 //how much exp an enemy will give or how much the player currently has
+    integer level = 1       //current level of the enemy/player
+    number currentAttack = 1 //current multiplier for outgoing damage
+    Array<number> currentElementsEffectiveness //current multiplier for incoming damage
+    Array<Status> statuses  //statuses currently inflicted on this combatant
+
+    Game game
+    Camera camera = undefined
+    Battle battle
+    Array<Item2D> removalArray
+    BehaviorQueue behaviorQueue
+
+    GameStateManager manager
+
+    /*When initialized the currentElementsEffectiveness array is given 
+    6 undefined values, it also cannot grow larger or smaller*/
+    on create
+        currentElementsEffectiveness:SetSize(6)
+        currentElementsEffectiveness:SetMaxSize(6)
+        currentElementsEffectiveness:SetAutoResize(false)
+    end
+
+    /*Take an attack from potentially an enemy, ally, or theirself, determines
+    if it heals or damages, and if damaging calculates and applies it along
+    with its status effects*/
+    action ReceiveAttack(Attack attack, Combatant user)
+        Array<text> log
+        number damageModifier = 0
+        integer damageReceived = 0
+        integer attackID = attack:GetID()
+
+        //The attack is solely used for healing
+        if (attack:GetCanHeal() and not attack:GetCanDamage())
+            ReceiveHeal(attack, user)
+        elseif (attack:GetCanDamage())
+            if (attack is Physical)
+                Physical physicalAttack = cast(Physical, attack)
+                integer element = physicalAttack:GetElementalType()
+                if (element not= 0)
+                    damageModifier = currentElementsEffectiveness:Get(element - 1)
+                else
+                    damageModifier = 1
+                end
+            else
+                damageModifier = CalculateDamageModifier(attackID)
+            end
+
+            damageReceived = cast(integer, damageModifier
+             * attack:GetBaseDamage() * user:GetCurrentAttack())
+
+            text incomingAttack = ""
+            if (attack is Spell)
+                incomingAttack = user:GetName() + " cast "
+                 + attack:GetName() + " on " + GetName() + "!"
+            else
+                incomingAttack = user:GetName() + " used "
+                 + attack:GetName() + " on " + GetName() + "!"
+            end
+            log:Add(incomingAttack)
+
+            // dialogue behavior
+            DisplayLogBehavior updateMessage
+            updateMessage:SetGame(game)
+            updateMessage:SetLog(log)
+            updateMessage:SetRemovalArray(removalArray)
+            updateMessage:SetCamera(manager:GetGame():GetCamera2D())
+            behaviorQueue:AddBehavior(updateMessage)
+            
+            // deal damage behavior
+            CombatDamageBehavior damageBehavior
+            damageBehavior:SetTarget(me)
+            damageBehavior:SetAmount(damageReceived)
+            behaviorQueue:AddBehavior(damageBehavior)
+
+            // update battle GUI
+            battle:UpdateStatus()
+
+            Array<text> log2
+            log2:Add(GetName() + " took " + damageReceived + " damage!")
+
+            if (currentHP - damageReceived <= 0) and (not (me is Player))
+                log2:Add(GetName() + " was defeated!")
+                log2:Add(user:GetName() + " gained " + GetExperienceValue() + " experience!")
+            end
+
+            // dialogue behavior
+            DisplayLogBehavior updateMessage2
+            updateMessage2:SetGame(game)
+            updateMessage2:SetLog(log2)
+            updateMessage2:SetRemovalArray(removalArray)
+            updateMessage2:SetCamera(manager:GetGame():GetCamera2D())
+            behaviorQueue:AddBehavior(updateMessage2)
+
+            //Leeching attack
+            if (attack:GetCanHeal())
+                integer healReceived = damageReceived
+
+                if (user:GetCurrentHP() + healReceived > user:GetMaxHP())
+                    healReceived = user:GetMaxHP() - user:GetCurrentHP()
+                end
+
+                // heal damage behavior
+                CombatHealBehavior healBehavior
+                healBehavior:SetTarget(user)
+                healBehavior:SetAmount(healReceived)
+                behaviorQueue:AddBehavior(healBehavior)
+
+                // update battle GUI
+                battle:UpdateStatus()
+
+                Array<text> log3
+                log3:Add(user:GetName() + " stole " + healReceived + " from " + GetName() + "!")
+
+                // dialogue behavior
+                DisplayLogBehavior updateMessage3
+                updateMessage3:SetGame(game)
+                updateMessage3:SetLog(log3)
+                updateMessage3:SetRemovalArray(removalArray)
+                updateMessage3:SetCamera(manager:GetGame():GetCamera2D())
+                behaviorQueue:AddBehavior(updateMessage3)
+            end
+        end
+
+        //If target dies from the hit don't bother with status effects
+        if (currentHP - damageReceived > 0)
+            Array<text> statusResults = ApplyAttackStatuses(attack)
+
+            // dialogue behavior
+            DisplayLogBehavior updateMessage4
+            updateMessage4:SetGame(game)
+            updateMessage4:SetLog(statusResults)
+            updateMessage4:SetRemovalArray(removalArray)
+            updateMessage4:SetCamera(manager:GetGame():GetCamera2D())
+            behaviorQueue:AddBehavior(updateMessage4)
+        end
+    end
+
+    /*Takes a healing attack from an enemy, ally, or theirself, applies/removes
+    status. Note: currently only goes off spell base damage*/
+    action ReceiveHeal(Attack healMove, Combatant user) 
+        Array<text> log
+        integer healReceived = healMove:GetBaseDamage()
+
+        if (currentHP + healReceived > maxHP)
+            healReceived = maxHP - currentHP
+        end
+
+        text incomingMove = ""
+        if (healMove is Spell)
+            incomingMove = user:GetName() + " cast "
+             + healMove:GetName() + " on " + GetName() + "!"
+        else
+            incomingMove = user:GetName() + " used "
+             + healMove:GetName() + " on " + GetName() + "!"
+        end
+        log:Add(incomingMove)
+
+        // dialogue behavior
+        DisplayLogBehavior updateMessage
+        updateMessage:SetGame(game)
+        updateMessage:SetLog(log)
+        updateMessage:SetRemovalArray(removalArray)
+        updateMessage:SetCamera(manager:GetGame():GetCamera2D())
+        behaviorQueue:AddBehavior(updateMessage)
+
+        // heal behavior
+        CombatHealBehavior healBehavior
+        healBehavior:SetTarget(me)
+        healBehavior:SetAmount(healReceived)
+        behaviorQueue:AddBehavior(healBehavior)
+
+        // update battle GUI
+        battle:UpdateStatus()
+
+        Array<text> log2
+        log2:Add(GetName() + " received " + healReceived + " health!")
+
+        // dialogue behavior
+        DisplayLogBehavior updateMessage2
+        updateMessage2:SetGame(game)
+        updateMessage2:SetLog(log2)
+        updateMessage2:SetRemovalArray(removalArray)
+        updateMessage2:SetCamera(manager:GetGame():GetCamera2D())
+        behaviorQueue:AddBehavior(updateMessage2)
+    end
+
+    /*Calculate what percentage of its base damage an attack will deal,
+    does not consider the attack stat. Is not used for physical attacks*/
+    action CalculateDamageModifier(integer elementID) returns number
+        number damageModifier = 0
+        integer tokens = 0
+        integer counter = 5
+        integer elementCount = 0
+
+        //elementID order: 6/7/8/9 fire water earth air light dark
+        repeat 6 times
+            elementCount = elementID mod 10
+            
+            if (elementCount > 0)
+                damageModifier = damageModifier + (cast(number, elementCount) 
+                 * currentElementsEffectiveness:Get(counter))
+                tokens = tokens + elementCount
+            end
+
+            elementID = elementID / 10
+            counter = counter - 1
+        end
+
+        if (tokens not= 0)
+            damageModifier = damageModifier / cast(number, tokens)
+        else
+            damageModifier = 1
+        end
+
+        return damageModifier
+    end
+
+    /*Apply/remove all status effects attached to a given attack*/
+    action ApplyAttackStatuses(Attack attack) returns Array<text>
+        Array<text> statusChange
+
+        integer i = 0
+        Status currentStatus
+        repeat while (i < attack:GetAppliedStatuses():GetSize())
+            currentStatus = attack:GetAppliedStatusesAtPosition(i)
+            if (ApplyStatus(currentStatus))
+                statusChange:Add(GetName() + " was inflicted with the status "
+                 + currentStatus:GetName() + "!")
+            end
+            i = i + 1
+        end
+
+        i = 0
+        repeat while (i < attack:GetCuredStatuses():GetSize())
+            currentStatus = attack:GetCuredStatusesAtPosition(i)
+            if (RemoveStatus(currentStatus:GetStatusID()))
+                statusApplied = GetName() + " had the status "
+                 + currentStatus:GetName() + " removed!"
+                statusChange:Add(statusApplied)
+            end
+            i = i + 1
+        end
+      
+        return statusChange
+    end
+
+    /*Apply the basic results of a status being inflicted, also stacks effects 
+    with different statuses and checks if the application chance works in the 
+    first place. If the status being applied already exists it's turn timer is
+    reset, if there exists a weaker version of the status it is overruled, and
+    if there is a stronger version already the new status is not applied.
+    Will return true if status succesfully applied, false if target resisted*/
+    action ApplyStatus(Status newStatus) returns boolean
+        integer statusID = newStatus:GetStatusID()
+        text statusName = newStatus:GetName()
+        Random randomSelection
+        integer randomNumber = randomSelection:RandomIntegerBetween(1, 100)
+        integer applyChance = cast(integer, newStatus:GetApplicationChance() * 100)
+
+        if (randomNumber > applyChance)
+            return false
+        end
+
+        Status currentStatus
+        Iterator<Status> it = statuses:GetIterator()
+        boolean found = false
+        repeat while (it:HasNext() and not found)
+            currentStatus = it:Next()
+
+            if (statusID = currentStatus:GetStatusID())
+                found = true
+                currentStatus:SetTurnCounter(newStatus:GetTurnCounter())
+            elseif (statusName = currentStatus:GetName())
+                found = true
+                if (statusID > currentStatus:GetStatusID())
+                    RemoveStatus(currentStatus:GetStatusID())
+
+                    if (newStatus:GetElementID() / 1000000 = 6)
+                        currentAttack = currentAttack * newStatus:GetBaseModifier()
+                    end
+
+                    integer i = 0
+                    number newElementEffectiveness = 0
+                    repeat while (i < 6)
+                        newElementEffectiveness = currentElementsEffectiveness:Get(i)
+                         * newStatus:GetEffectivenessStatModifiersAtPosition(i)
+                        currentElementsEffectiveness:Set(i, newElementEffectiveness)
+                        i = i + 1
+                    end
+
+                    statuses:Add(newStatus)
+                end
+            end
+        end
+        
+        if (not found)
+            if (newStatus:GetElementID() / 1000000 = 6)
+                currentAttack = currentAttack * newStatus:GetBaseModifier()
+            end
+
+            integer i = 0
+            number newElementEffectiveness = 0
+            repeat while (i < 6)
+                newElementEffectiveness = currentElementsEffectiveness:Get(i)
+                 * newStatus:GetEffectivenessStatModifiersAtPosition(i) 
+                currentElementsEffectiveness:Set(i, newElementEffectiveness)
+                i = i + 1
+            end
+
+            statuses:Add(newStatus)
+        end
+
+        return true
+    end
+
+    /*Go through the status array, if the status inflicts damage apply it,
+    update the turn counter, if turn counter hits 0 remove the status effect
+    and its stat changes*/
+    action UpdateStatus()
+        integer elementID = 0
+
+        integer i = 0
+        Status currentStatus
+        repeat while (i < statuses:GetSize())
+            currentStatus = statuses:Get(i)
+            elementID = currentStatus:GetElementID()
+
+            Array<text> log
+
+            if (elementID / 1000000 = 7)
+                if (currentStatus:GetIsHealing())
+                    integer healReceived = 0
+                    healReceived = currentStatus:GetBaseDamage()
+                    if (currentHP + healReceived > maxHP)
+                        healReceived = maxHP - currentHP
+                    end
+
+                    // heal behavior
+                    CombatHealBehavior healingBehavior
+                    healingBehavior:SetTarget(me)
+                    healingBehavior:SetAmount(healReceived)
+                    behaviorQueue:AddBehavior(healingBehavior)
+
+                    // update battle GUI
+                    battle:UpdateStatus()
+
+                    log:Add(GetName() + " healed " + healReceived + " health from " + currentStatus:GetName() + "!")
+
+                    // dialogue behavior
+                    DisplayLogBehavior updateMessage
+                    updateMessage:SetGame(game)
+                    updateMessage:SetLog(log)
+                    updateMessage:SetRemovalArray(removalArray)
+                    updateMessage:SetCamera(manager:GetGame():GetCamera2D())
+                    behaviorQueue:AddBehavior(updateMessage)
+                else
+                    integer damageReceived = 0
+                    damageReceived = cast(integer, CalculateDamageModifier(elementID) 
+                     * currentStatus:GetBaseDamage())
+
+                    // damage behavior
+                    CombatDamageBehavior damageBehavior
+                    damageBehavior:SetTarget(me)
+                    damageBehavior:SetAmount(damageReceived)
+                    behaviorQueue:AddBehavior(damageBehavior)
+
+                    // update battle GUI
+                    battle:UpdateStatus()
+
+                    log:Add(GetName() + " took " + damageReceived + " damage from " + currentStatus:GetName() + "!")
+
+                    if (currentHP - damageReceived <= 0) and (not (me is Player))
+                        log:Add(GetName() + " was defeated!")
+                        log:Add(battle:GetPlayer():GetName() + " gained " + GetExperienceValue() + " experience!")
+                    end
+
+                    // dialogue behavior
+                    DisplayLogBehavior updateMessage
+                    updateMessage:SetGame(game)
+                    updateMessage:SetLog(log)
+                    updateMessage:SetRemovalArray(removalArray)
+                    updateMessage:SetCamera(manager:GetGame():GetCamera2D())
+                    behaviorQueue:AddBehavior(updateMessage)
+                end
+            end
+            
+            currentStatus:DecrementTurnCounter()
+            if (currentStatus:GetTurnCounter() <= 0)
+                if (elementID / 1000000 = 6)
+                    currentAttack = currentAttack / currentStatus:GetBaseModifier()
+                end
+
+                integer j = 0
+                number newElementEffectiveness = 0
+                repeat while (j < 6)
+                    newElementEffectiveness = currentElementsEffectiveness:Get(j)
+                     / currentStatus:GetEffectivenessStatModifiersAtPosition(j) 
+                    currentElementsEffectiveness:Set(j, newElementEffectiveness)
+                    j = j + 1
+                end
+
+                statuses:RemoveAt(i)
+            else
+                i = i + 1
+            end
+        end
+    end
+
+    /*Remove a specific status effect and its stat changes, return true if
+    the status effect was found and removed, false otherwise*/
+    action RemoveStatus(integer statusID) returns boolean
+        Iterator<Status> it = statuses:GetIterator()
+        Status currentStatus
+        repeat while (it:HasNext())
+            currentStatus = it:Next()
+
+            if (currentStatus:GetStatusID() = statusID)
+                if (currentStatus:GetElementID() / 1000000 = 6)
+                    currentAttack = currentAttack / currentStatus:GetBaseModifier()
+                end
+
+                integer i = 0
+                number newElementEffectiveness = 0
+                repeat while (i < 6)
+                    newElementEffectiveness = currentElementsEffectiveness:Get(i)
+                     / currentStatus:GetEffectivenessStatModifiersAtPosition(i) 
+                    currentElementsEffectiveness:Set(i, newElementEffectiveness)
+                    i = i + 1
+                end
+                statuses:Remove(currentStatus)
+                return true
+            end
+        end
+
+        return false
+    end
+
+    /*Remove all status effects and their stat changes*/
+    action ClearAllStatus()
+        Iterator<Status> it = statuses:GetIterator()
+        Status currentStatus
+        repeat while (it:HasNext())
+            currentStatus = it:Next()
+
+            if (currentStatus:GetElementID() / 1000000 = 6)
+                currentAttack = currentAttack / currentStatus:GetBaseModifier()
+            end
+
+            integer i = 0
+            number newElementEffectiveness = 0
+            repeat while (i < 6)
+                newElementEffectiveness = currentElementsEffectiveness:Get(i)
+                 / currentStatus:GetEffectivenessStatModifiersAtPosition(i) 
+                currentElementsEffectiveness:Set(i, newElementEffectiveness)
+                i = i + 1
+            end
+        end
+
+        statuses:Empty()
+    end
+
+    /*Applies damage and checks if that defeats the target*/
+    action CheckDefeated returns boolean
+        return currentHP <= 0
+    end
+
+/*******************************************************************************
+                    Getters and Setters Below This Point
+*******************************************************************************/
+
+    action SetName(text newName)
+        name = newName
+    end
+
+    action GetName() returns text
+        return name
+    end
+
+    action SetCurrentHP(integer newCurrentHP)
+        currentHP = newCurrentHP
+    end
+
+    action GetCurrentHP() returns integer
+        return currentHP
+    end
+
+    action SetMaxHP(integer newMaxHP)
+        maxHP = newMaxHP
+    end
+
+    action GetMaxHP() returns integer
+        return maxHP
+    end
+
+    action SetExperienceValue(integer newExperienceValue)
+        experienceValue = newExperienceValue
+    end
+
+    action GetExperienceValue() returns integer
+        return experienceValue
+    end
+
+    action SetLevel(integer newLevel)
+        level = newLevel
+    end
+
+    action GetLevel() returns integer
+        return level
+    end
+
+    action SetCurrentAttack(number newCurrentAttack)
+        currentAttack = newCurrentAttack
+    end
+
+    action GetCurrentAttack() returns number
+        return currentAttack
+    end
+
+    action SetCurrentElementsEffectivenessAtPosition(integer position, number newCurrentResistance)
+        currentElementsEffectiveness:Set(position, newCurrentResistance)
+    end
+
+    action GetCurrentElementsEffectivenessAtPosition(integer position) returns number
+        return currentElementsEffectiveness:Get(position)
+    end
+
+    action GetCurrentElementsEffectiveness() returns Array<number>
+        return currentElementsEffectiveness
+    end
+
+    action GetStatuses() returns Array<Status>
+        return statuses
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newQueue)
+        behaviorQueue = newQueue
+    end
+end

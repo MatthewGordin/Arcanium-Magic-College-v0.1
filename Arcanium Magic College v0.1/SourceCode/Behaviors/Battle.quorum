@@ -1,0 +1,334 @@
+use Libraries.Containers.Array
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+use Libraries.Interface.Controls.TextBox
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Label
+use Libraries.Compute.Math
+use Libraries.Interface.Item2D
+use Libraries.Interface.Events.KeyboardListener
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.GameStateManager
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Interface.AccessibilityManager
+
+class Battle is Behavior
+
+    Game game
+    Camera camera = undefined
+    BehaviorQueue behaviorQueue
+    Array<Item2D> removalArray
+    Behavior previousBehavior
+    Array<Combatant> combatants
+    Array<Label> statusInfo
+    Array<Label> statusNames
+    Array<Drawable> statusWindows
+    Array<Drawable> sprites
+    Array<Drawable> backgrounds
+    Array<text> log
+    Color color
+    Label playerMana
+    boolean created = false
+    Array<boolean> flags
+    Array<CombatMainPageBehavior> playerTurns
+
+    action Run(BehaviorEvent event)
+        boolean isFinished = false
+        flags:Add(isFinished)
+
+        PlayerTurn()
+    end
+
+    action Dispose
+        integer counter = 0
+
+        repeat while counter < playerTurns:GetSize()
+            playerTurns:Get(counter):Dispose()
+
+            counter = counter + 1
+        end
+    end
+
+    action IsFinished returns boolean
+        return flags:Get(0)
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action Initialize(Player player, Array<text> enemyTeam)
+
+        GameStateManager manager
+        game = manager:GetGame()
+        AccessibilityManager manager2 = manager:GetAccessibilityManager()
+        output manager2:IsScreenReaderListening()
+
+        playerTurns:Empty()
+        combatants:Empty()
+        statusInfo:Empty()
+        statusNames:Empty()
+        statusWindows:Empty()
+        sprites:Empty()
+        backgrounds:Empty()
+        flags:Empty()
+        log:Empty()
+
+        camera = game:GetCamera2D()
+
+        integer cameraX = cast(integer, camera:GetPosition():GetX()-camera:GetWidth()/2)
+        integer cameraY = cast(integer, camera:GetPosition():GetY()-camera:GetHeight()/2)
+
+        Drawable background
+        background:Load("Assets/Sprites/combat-background.png")
+        background:Scale(0.65)
+        background:SetPosition(cameraX-110, cameraY-30)
+        game:Add(background)
+        backgrounds:Add(background)
+
+//        Main main = cast(Main, game)
+//        main:SetCurrentAnim("air", "Air")
+
+        player:SetBattle(me)
+        combatants:Add(player)
+
+        Drawable playerSprite
+        playerSprite:Load("Assets/Sprites/hero-battle.png")
+        playerSprite:Scale(2)
+        playerSprite:FlipX()
+        playerSprite:SetPosition(cameraX+50, cameraY+170)
+        game:Add(playerSprite)
+        sprites:Add(playerSprite)
+
+        //displays player health and mana
+        Drawable playerHealthBackground
+        playerHealthBackground:Load("Assets/Sprites/info-box.png")
+        playerHealthBackground:SetScale(5, 2.2)
+        playerHealthBackground:SetPosition(cameraX+170, cameraY+200)
+        game:Add(playerHealthBackground)
+        statusWindows:Add(playerHealthBackground)
+
+        Label playerName
+        playerName:SetText(player:GetName())
+        playerName:SetPosition(cameraX+230, cameraY+275)
+        playerName:SetFontSize(20)
+        game:Add(playerName)
+        statusNames:Add(playerName)
+
+        Label playerHealth
+        playerHealth:SetText("Health: " + player:GetCurrentHP() + "/" + player:GetMaxHP())
+        playerHealth:SetPosition(cameraX+230, cameraY+255)
+        playerHealth:SetFontSize(20)
+        game:Add(playerHealth)
+        statusInfo:Add(playerHealth)
+
+        playerMana:SetText("Mana: " + player:GetCurrentMP() + "/" + player:GetMaxMP())
+        playerMana:SetPosition(cameraX+230, cameraY+235)
+        playerMana:SetFontSize(20)
+        game:Add(playerMana)
+
+        integer counter = 0
+
+        repeat while counter < enemyTeam:GetSize()
+            if counter >= 3
+                counter = enemyTeam:GetSize()
+                output "Warning: only 3 enemies allowed per battle, extra enemies ignored."
+            else
+                Enemy enemy
+                enemy:FillEnemy(enemyTeam:Get(counter))
+                enemy:SetGame(game)
+                enemy:SetCamera(camera)
+                enemy:SetBattle(me)
+                enemy:SetRemovalArray(removalArray)
+                enemy:SetBehaviorQueue(behaviorQueue)
+                combatants:Add(enemy)
+
+                counter = counter + 1
+            end
+        end
+        
+        integer combatantIndex = 1
+
+        repeat while combatantIndex < combatants:GetSize()
+            Drawable enemySprite
+            if combatants:Get(combatantIndex):GetName() = "Goblin" 
+                enemySprite:Load("Assets/Sprites/goblin-combat.png")
+                enemySprite:Scale(2)
+            elseif combatants:Get(combatantIndex):GetName() = "Goblin Shaman"
+                enemySprite:Load("Assets/Sprites/shaman-combat.png")
+                enemySprite:Scale(2)
+            elseif combatants:Get(combatantIndex):GetName() = "Wolf"
+                enemySprite:Load("Assets/Sprites/Wolf.png")
+                enemySprite:Scale(2)
+                enemySprite:FlipX()
+            elseif combatants:Get(combatantIndex):GetName() = "Slime"
+                enemySprite:Load("Assets/Sprites/slime.png")
+                enemySprite:Scale(2)
+            elseif combatants:Get(combatantIndex):GetName() = "Orc"
+                enemySprite:Load("Assets/Sprites/orc.png")
+                enemySprite:Scale(2)
+            end
+
+            enemySprite:SetPosition(cameraX + 400 + 120 * (combatantIndex - 1), cameraY + 350 + 50 * ((combatantIndex - 1) mod 2))
+            game:Add(enemySprite)
+            sprites:Add(enemySprite)
+
+            Drawable enemyHealthBackground
+            enemyHealthBackground:Load("Assets/Sprites/info-box.png")
+            enemyHealthBackground:SetScale(5, 1.5)
+            enemyHealthBackground:SetPosition(cameraX + 120, cameraY + 495 - 70 * (combatantIndex - 1))
+            game:Add(enemyHealthBackground)
+            statusWindows:Add(enemyHealthBackground)
+
+            Label enemyName
+            enemyName:SetText(combatants:Get(combatantIndex):GetName())
+            enemyName:SetPosition(cameraX+180, cameraY + 540 - 70 * (combatantIndex - 1))
+            enemyName:SetFontSize(20)
+            game:Add(enemyName)
+            statusNames:Add(enemyName)
+
+            Label enemyHealth
+            enemyHealth:SetText("Health: " + combatants:Get(combatantIndex):GetCurrentHP() + "/" + combatants:Get(combatantIndex):GetMaxHP())
+            enemyHealth:SetPosition(cameraX + 180, cameraY + 520 - 70 * (combatantIndex - 1))
+            enemyHealth:SetFontSize(20)
+            game:Add(enemyHealth)
+            statusInfo:Add(enemyHealth)
+
+            combatantIndex = combatantIndex + 1
+        end
+
+        counter = 1
+
+        text enemiesLog = "An enemy "
+        repeat while counter < combatants:GetSize()
+            if counter = combatants:GetSize() - 1
+                if counter not= 1
+                    enemiesLog = enemiesLog + "and " + combatants:Get(counter):GetName() + " attacked!"
+                else
+                    enemiesLog = enemiesLog + combatants:Get(counter):GetName() + " attacked!"
+                end
+            else
+                enemiesLog = enemiesLog + combatants:Get(counter):GetName() + ", "
+            end
+
+            counter = counter + 1
+        end
+        log:Add(enemiesLog)
+
+        Drawable dialogueBackground
+        dialogueBackground:Load("Assets/Sprites/dialogue-box.png")
+        dialogueBackground:SetPosition(cameraX-110, cameraY-30)
+        dialogueBackground:Scale(3.53)
+        game:Add(dialogueBackground)
+        backgrounds:Add(dialogueBackground)
+
+        DisplayLogBehavior logBehavior
+        logBehavior:SetGame(game)
+        logBehavior:SetLog(log)
+        logBehavior:SetRemovalArray(removalArray)
+        logBehavior:SetCamera(camera)
+        behaviorQueue:AddBehavior(logBehavior)
+    end
+
+    action UpdateStatus
+        UpdateStatus(false)
+    end
+
+    action UpdateStatus(boolean checkForVictory)
+        if not flags:Get(0)
+            CombatUpdateStatusBehavior behavior
+            behavior:SetGame(game)
+            behavior:SetRemovalArray(removalArray)
+            behavior:SetCamera(camera)
+            behavior:SetCombatants(combatants)
+            behavior:SetPlayerMana(playerMana)
+            behavior:SetStatusInfo(statusInfo)
+            behavior:SetStatusNames(statusNames)
+            behavior:SetStatusWindows(statusWindows)
+            behavior:SetSprites(sprites)
+            behavior:SetBackgrounds(backgrounds)
+            behavior:SetCheckForVictory(checkForVictory)
+            behavior:SetPlayerTurns(playerTurns)
+            behavior:SetFlags(flags)
+            behaviorQueue:AddBehavior(behavior)
+        end
+    end
+
+    action PlayerTurn
+        if not flags:Get(0) and combatants:Get(0) not= undefined
+            Player player = cast(Player, combatants:Get(0))
+            if player:GetCurrentMP() not= player:GetMaxMP()
+                player:SetCurrentMP(player:GetCurrentMP() + 1)
+            end
+            UpdateStatus()
+
+            CombatMainPageBehavior behavior
+            behavior:SetGame(game)
+            behavior:SetBehaviorQueue(behaviorQueue)
+            behavior:SetRemovalArray(removalArray)
+            behavior:SetCamera(camera)
+            behavior:SetBattle(me)
+            behavior:SetMaxTokens(2)
+            behavior:SetCombatants(combatants)
+            behavior:SetSprites(sprites)
+            behavior:SetFlags(flags)
+            behaviorQueue:AddBehavior(behavior)
+
+            playerTurns:AddToFront(behavior)
+        end
+    end
+
+    action EnemyTurn
+        if not flags:Get(0)
+            CombatEnemyTurnBehavior behavior
+            behavior:SetGame(game)
+            behavior:SetRemovalArray(removalArray)
+            behavior:SetCamera(camera)
+            behavior:SetBattle(me)
+            behavior:SetCombatants(combatants)
+            behavior:SetBehaviorQueue(behaviorQueue)
+            behavior:SetFlags(flags)
+            behaviorQueue:AddBehavior(behavior)
+        end
+    end
+
+    action GetCombatants returns Array<Combatant>
+        return combatants
+    end
+
+    action GetSprites returns Array<Drawable>
+        return sprites
+    end
+
+    action GetPlayer returns Combatant
+        return combatants:Get(0)
+    end
+
+    action SetBehaviorQueue(BehaviorQueue queue)
+        behaviorQueue = queue
+    end
+
+    action SetPreviousBehavior(Behavior behavior)
+        previousBehavior = behavior
+    end
+
+    action GetPreviousBehavior returns Behavior
+        return previousBehavior
+    end
+
+    action SetFinishedCombat(boolean bool)
+        finishedCombat = bool
+    end
+
+end

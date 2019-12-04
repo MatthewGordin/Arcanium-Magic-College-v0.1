@@ -1,0 +1,11 @@
+{
+  "interactables": [
+    {
+      "name": "Interactable Tombstone",
+      "type": "dialogue",
+      "dialogue": [
+        "You kneel and recite a short prayer for the deceased."
+      ]
+    }
+  ]
+}

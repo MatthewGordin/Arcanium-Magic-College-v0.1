@@ -1,0 +1,5 @@
+class Cinematic 
+    action Run()
+        
+    end
+end

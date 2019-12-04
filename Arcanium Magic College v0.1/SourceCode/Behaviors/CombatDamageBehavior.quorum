@@ -1,0 +1,31 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+
+class CombatDamageBehavior is Behavior
+
+    Combatant target
+    integer amount = 0
+    boolean finished = false
+
+    action Run(BehaviorEvent event)
+        if target:GetCurrentHP() - amount <= 0
+            target:SetCurrentHP(0)
+        else
+            target:SetCurrentHP(target:GetCurrentHP() - amount)
+        end
+
+        finished = true
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetTarget(Combatant newTarget)
+        target = newTarget
+    end
+
+    action SetAmount(integer newAmount)
+        amount = newAmount
+    end
+end

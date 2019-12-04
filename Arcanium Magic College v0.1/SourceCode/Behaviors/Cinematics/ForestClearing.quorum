@@ -1,0 +1,235 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class ForestClearing is Cinematic
+    
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+    MapList maps
+    
+    //Actors
+    Animation player
+    text playerImgSheet = "Hero"
+
+    Animation boy
+    text boyImgSheet = "Boy"
+
+    //PostProcessing
+    Drawable rectangle1
+    Color fade1
+
+    //Dialogue
+    Array<text> dialogueText1
+    Array<text> dialogueText2
+    Array<text> dialogueText3
+    Array<text> dialogueText4
+    Array<text> dialogueText5
+    Array<text> dialogueText6
+
+    PanCameraBehavior   cameraPan1
+    ColorFadeBehavior   colorFade1
+
+    RemoveObjectBehavior remove1
+    RemoveObjectBehavior remove2
+
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    DisplayLogBehavior  dialogue4
+    DisplayLogBehavior  dialogue5
+    DisplayLogBehavior  dialogue6
+
+    MoveNPCBehavior     moveNPC1
+    MoveNPCBehavior     moveNPC2
+    MoveNPCBehavior     moveNPC3
+    MoveNPCBehavior     moveNPC4
+    MoveNPCBehavior     moveNPC5
+    MoveNPCBehavior     moveNPC6
+
+    MoveNPCBehavior     moveBoy1
+    MoveNPCBehavior     moveBoy2
+    MoveNPCBehavior     moveBoy3
+    MoveNPCBehavior     moveBoy4
+    MoveNPCBehavior     moveBoy5
+    MoveNPCBehavior     moveBoy6
+
+    WaitForBehavior     wait1
+    WaitForBehavior     wait2
+    WaitForBehavior     wait3
+    WaitForBehavior     wait4
+
+    PlaySoundBehavior   sound1
+    MapTransitionBehavior transition1
+    
+
+    action Run()
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+
+    action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+
+        //Player
+        player = main:GetPlayer():playerSprite
+        player:sprite1:SetCollidable(false)
+        player:sprite1:SetPosition(414, 398)
+        player:sprite3:SetPosition(414, 398)
+
+        //Boy
+        boy:LoadImageSheet(boyImgSheet)
+        boy:LoadFrame(boyImgSheet)
+        boy:sprite1:SetPosition(-40, 355)
+        boy:sprite1:SetScale(0.7)
+        main:Add(boy:sprite1)
+
+        //Camera
+        main:GetCamera2D():SetPosition(400,360,0)
+
+        //Dialogue
+        dialogueText1:Add("You wake up in a daze to the sound of cicadas, beneath a thick canopy of leaves. A piercing headache overcomes you.")
+        dialogueText1:Add("Suddenly, you hear rustling... Someone is approaching.")
+        dialogueText2:Add("HERO: Wait! Its alright I wont hurt you.") 
+        dialogueText3:Add("HERO: You were the kid from earlier right?")
+        dialogueText3:Add("The kid shyly nods.")
+        dialogueText3:Add("HERO: Did you drag me here in the forest? After I blacked out?")
+        dialogueText3:Add("BOY: After you killed the monsters.")
+        dialogueText3:Add("HERO: You did a good job. Do you know where your parents are?")
+        dialogueText3:Add("He solemnly shakes his head.")
+        dialogueText4:Add("BOY: There's more of them here now.")
+        dialogueText5:Add("HERO: We need to leave soon, and get you back to your family.")
+        dialogueText6:Add("HERO: Stay close to me.")
+
+        main:Remove(main:GetMap():aboveLayer)
+        main:LoadAboveLayer(main:GetMap(), maps:FOREST_CLEARING_MAP)
+
+        //PostProcessing
+        rectangle1:SetColor(0,0,0,1)    
+        rectangle1:LoadFilledRectangle(800,800)
+        main:Add(rectangle1)
+
+        
+    end
+
+    action BehaviorSetup()
+        colorFade1:     SetDrawable(rectangle1)
+        colorFade1:     SetFade(0, 0, 0, 0, 3)
+
+        dialogue1:      SetRemovalArray(main:GetRemovalArray())
+        dialogue1:      SetGame(main)
+        dialogue1:      SetCamera(main:GetCamera2D())
+        dialogue1:      SetLog(dialogueText1)
+
+        dialogue2:      SetRemovalArray(main:GetRemovalArray())
+        dialogue2:      SetGame(main)
+        dialogue2:      SetCamera(main:GetCamera2D())
+        dialogue2:      SetLog(dialogueText2)
+
+
+        dialogue3:      SetRemovalArray(main:GetRemovalArray())
+        dialogue3:      SetGame(main)
+        dialogue3:      SetCamera(main:GetCamera2D())
+        dialogue3:      SetLog(dialogueText3)
+
+        dialogue4:      SetRemovalArray(main:GetRemovalArray())
+        dialogue4:      SetGame(main)
+        dialogue4:      SetCamera(main:GetCamera2D())
+        dialogue4:      SetLog(dialogueText4)
+
+        dialogue5:      SetRemovalArray(main:GetRemovalArray())
+        dialogue5:      SetGame(main)
+        dialogue5:      SetCamera(main:GetCamera2D())
+        dialogue5:      SetLog(dialogueText5)
+
+        dialogue6:      SetRemovalArray(main:GetRemovalArray())
+        dialogue6:      SetGame(main)
+        dialogue6:      SetCamera(main:GetCamera2D())
+        dialogue6:      SetLog(dialogueText6)
+
+        moveNPC1:       SetAnimation(player, playerImgSheet)
+        moveNPC1:       SetMoveDirection(0,-60, 1)
+
+        moveNPC2:       SetAnimation(player, playerImgSheet)
+        moveNPC2:       SetMoveDirection(80,0, 0.5)
+
+        moveNPC3:       SetAnimation(player, playerImgSheet)
+        moveNPC3:       SetMoveDirection(-80,0, 1)
+
+        moveNPC4:       SetAnimation(player, playerImgSheet)
+        moveNPC4:       SetMoveDirection(-80, 0, 3)
+
+        moveNPC5:       SetAnimation(player, playerImgSheet)
+        moveNPC5:       SetMoveDirection(60, 0, 0.1)
+
+        moveNPC6:       SetAnimation(player, playerImgSheet)
+        moveNPC6:       SetNPCCollidable(true)
+
+        moveBoy1:       SetAnimation(boy, boyImgSheet)
+        moveBoy1:       SetMoveDirection(70, 0, 2)
+
+        moveBoy2:       SetAnimation(boy, boyImgSheet)
+        moveBoy2:       SetMoveDirection(0, -110, 0.23)
+
+        moveBoy3:       SetAnimation(boy, boyImgSheet)
+        moveBoy3:       SetMoveDirection(110, 0, 0.85)
+
+        moveBoy4:       SetAnimation(boy, boyImgSheet)
+        moveBoy4:       SetMoveDirection(0, 60, 0.3)
+
+        moveBoy5:       SetAnimation(boy, boyImgSheet)
+        moveBoy5:       SetMoveDirection(30, 0, 4)
+
+        moveBoy6:       SetAnimation(boy, boyImgSheet)
+        moveBoy6:       SetMoveDirection(-60, 0, 0.6)
+
+        wait1:          SetWaitDuration(0.5)
+        wait2:          SetWaitDuration(0.5)
+        wait3:          SetWaitDuration(1)
+
+        remove1:        SetDrawable(rectangle1)
+        remove2:        SetDrawable(boy:sprite1)
+
+//        Map tempMap
+//        transition1:SetTransition(tempMap, maps:FOREST_PATH_1_MAP)
+        
+    end
+    
+    action EnqueueBehaviors()
+        cineSequencer:AddCineEvent(colorFade1, true)
+        cineSequencer:AddCineEvent(remove1, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+        cineSequencer:AddCineEvent(moveNPC1, true)
+        cineSequencer:AddCineEvent(moveNPC2, true)
+        cineSequencer:AddCineEvent(wait1, true)
+        cineSequencer:AddCineEvent(moveNPC3, true)
+        cineSequencer:AddCineEvent(wait2, true)
+        cineSequencer:AddCineEvent(moveBoy1, true)
+        cineSequencer:AddCineEvent(wait3, true)
+        cineSequencer:AddCineEvent(moveBoy2, true)
+        cineSequencer:AddCineEvent(moveBoy3, false)
+        cineSequencer:AddCineEvent(dialogue2, true)
+        cineSequencer:AddCineEvent(moveBoy4, true)
+        cineSequencer:AddCineEvent(moveBoy5, true)
+        cineSequencer:AddCineEvent(dialogue3, true)
+        cineSequencer:AddCineEvent(moveBoy6, true)
+        cineSequencer:AddCineEvent(dialogue4, true)
+        cineSequencer:AddCineEvent(moveNPC4, true)
+        cineSequencer:AddCineEvent(dialogue5, true)
+        cineSequencer:AddCineEvent(moveNPC5, true)
+        cineSequencer:AddCineEvent(dialogue6, true)
+        cineSequencer:AddCineEvent(moveNPC6, true)
+        cineSequencer:AddCineEvent(remove2, true)
+    end
+        
+end

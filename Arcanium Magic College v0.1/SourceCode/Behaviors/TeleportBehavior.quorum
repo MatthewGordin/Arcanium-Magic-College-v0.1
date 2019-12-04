@@ -1,0 +1,97 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+use Libraries.Compute.Random
+use Libraries.Containers.Array
+use Libraries.Game.Game
+use Libraries.Game.GameStateManager
+
+class TeleportBehavior is Behavior
+
+    Game game
+    Player player
+    TeleportToMenuBehavior menu
+    Map currentMap
+
+    integer newX = 0
+    integer newY = 0
+    
+    boolean exit = false
+    boolean finished = false
+
+    action Run (BehaviorEvent event)
+        if not exit
+            player:playerSprite:sprite3:SetPosition(newX, newY)
+
+//            if currentMap:name:Contains("ForestPath")
+//                Random random
+//                integer randomInt = random:RandomInteger(99)
+//
+//                if randomInt < 25
+//                    integer whichEncounter = random:RandomInteger(4)
+//
+//                    Array<text> enemies
+//                    if whichEncounter = 0
+//                        enemies:Add("Goblin")
+//                        enemies:Add("Goblin Shaman")
+//                        enemies:Add("Goblin")
+//                    elseif whichEncounter = 1
+//                        enemies:Add("Wolf")
+//                        enemies:Add("Wolf")
+//                        enemies:Add("Wolf")
+//                    elseif whichEncounter = 2
+//                        enemies:Add("Slime")
+//                        enemies:Add("Slime")
+//                    elseif whichEncounter = 3
+//                        enemies:Add("Goblin")
+//                        enemies:Add("Wolf")
+//                    else    //whichEncounter = 5
+//                        enemies:Add("Goblin Shaman")
+//                        enemies:Add("Orc")
+//                    end
+//
+//                    GameStateManager manager
+//                    Main main = cast(Main, manager:GetGame())
+//                    main:CombatTest(enemies)
+//                end
+//            end
+        end
+
+        menu:Dispose()
+
+        finished = true
+    end
+    
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetMenu(TeleportToMenuBehavior newMenu)
+        menu = newMenu
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetPlayer(Player p)
+        player = p
+    end
+
+    action SetX(integer x)
+        newX = x
+    end
+
+    action SetY(integer y)
+        newY = y
+    end
+
+    action SetCurrentMap(Map newMap)
+        currentMap = newMap
+    end
+
+    action SetExit(boolean bool)
+        exit = bool
+    end
+end

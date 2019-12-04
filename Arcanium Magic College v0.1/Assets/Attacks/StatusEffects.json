@@ -1,0 +1,174 @@
+{
+  "statusEffects": [
+    {
+      "statusID": 1,
+      "elementID": 7100000,
+      "name": "Burn",
+      "modifier": 0.25,
+      "applicationChance": 0.2,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1.2, 0.9, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 2,
+      "elementID": 7100000,
+      "name": "Burn",
+      "modifier": 0.5,
+      "applicationChance": 0.6,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1.3, 0.8, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 3,
+      "elementID": 7000001,
+      "name": "Poison",
+      "modifier": 0.6,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 4,
+      "elementID": 7000001,
+      "name": "Poison",
+      "modifier": 1,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 4
+    },
+    {
+      "statusID": 5,
+      "elementID": 6000000,
+      "name": "Vulnerability",
+      "modifier": 1,
+      "applicationChance": 0.3,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1.2, 1.2, 1.2, 1.2, 1.2, 1.2],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 6,
+      "elementID": 6000000,
+      "name": "Frozen",
+      "modifier": 1,
+      "applicationChance": 0.4,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 1
+    },
+    {
+      "statusID": 7,
+      "elementID": 7001000,
+      "name": "Sandstorm",
+      "modifier": 1,
+      "applicationChance": 1.0,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 4
+    },
+    {
+      "statusID": 8,
+      "elementID": 6000000,
+      "name": "Weaken",
+      "modifier": 0.5,
+      "applicationChance": 0.5,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 9,
+      "elementID": 6000000,
+      "name": "Stun",
+      "modifier": 1,
+      "applicationChance": 0.2,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 1
+    },
+    {
+      "statusID": 10,
+      "elementID": 6000000,
+      "name": "Stun",
+      "modifier": 1,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 1
+    },
+    {
+      "statusID": 11,
+      "elementID": 6000000,
+      "name": "Blessed Ground",
+      "modifier": 1,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+      "turnsAffected": 5
+    },
+    {
+      "statusID": 12,
+      "elementID": 7000010,
+      "name": "Healing Aura",
+      "modifier": 1,
+      "applicationChance": 1,
+      "isHealing": true,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 5
+    },
+    {
+      "statusID": 13,
+      "elementID": 6000000,
+      "name": "Holy Fury",
+      "modifier": 1.3,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 14,
+      "elementID": 7100000,
+      "name": "Unholy Fire",
+      "modifier": 1,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1.3, 1.3, 1.3, 1.3, 1.3, 1.3],
+      "turnsAffected": 2
+    },
+    {
+      "statusID": 15,
+      "elementID": 7000000,
+      "name": "Bleed",
+      "modifier": 0.25,
+      "applicationChance": 0.5,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 16,
+      "elementID": 6000000,
+      "name": "Fright",
+      "modifier": 0.75,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    },
+    {
+      "statusID": 17,
+      "elementID": 6000000,
+      "name": "Encourage",
+      "modifier": 1.5,
+      "applicationChance": 1,
+      "isHealing": false,
+      "effectivenessStatModifiers": [1, 1, 1, 1, 1, 1],
+      "turnsAffected": 3
+    }
+  ]
+}

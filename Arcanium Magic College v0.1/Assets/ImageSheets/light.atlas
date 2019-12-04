@@ -1,0 +1,62 @@
+
+light.png
+size: 1024,128
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Light frame 1
+  rotate: false
+  xy: 2, 2
+  size: 92, 93
+  orig: 92, 93
+  offset: 0, 0
+  index: -1
+Light frame 2
+  rotate: false
+  xy: 284, 12
+  size: 86, 83
+  orig: 86, 83
+  offset: 0, 0
+  index: -1
+Light frame 3
+  rotate: false
+  xy: 191, 12
+  size: 91, 83
+  orig: 91, 83
+  offset: 0, 0
+  index: -1
+Light frame 4
+  rotate: false
+  xy: 618, 18
+  size: 81, 77
+  orig: 81, 77
+  offset: 0, 0
+  index: -1
+Light frame 5
+  rotate: false
+  xy: 372, 7
+  size: 80, 88
+  orig: 80, 88
+  offset: 0, 0
+  index: -1
+Light frame 6
+  rotate: false
+  xy: 536, 13
+  size: 80, 82
+  orig: 80, 82
+  offset: 0, 0
+  index: -1
+Light frame 7
+  rotate: false
+  xy: 454, 11
+  size: 80, 84
+  orig: 80, 84
+  offset: 0, 0
+  index: -1
+Light frame 8
+  rotate: false
+  xy: 96, 7
+  size: 93, 88
+  orig: 93, 88
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,155 @@
+/**********************************************************
+  Class for any Map Transitions
+  Inherits from Behavior for modularity
+
+  Initialize with SetTransition(1, 2)
+   1. MAP of the current map
+   2. TEXT (name) of the map to transition to
+
+  Set PLAYER's new position with SetCoordinates()
+  Remove current MAP and load new MAP with Run()
+  * Also sets PLAYER in new position (defaults to center)
+**********************************************************/
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+
+class MapTransitionBehavior is Behavior
+    // List of variables for MAPTRANSITIONBEHAVIOR
+    GameStateManager manager            // Used to get MAIN
+    MapList maps                        // all of the map names
+    Map currentMap                      // Current MAP
+    text mapName = ""                   // New map name
+    number playerX = 0                  // New Player X coordinate
+    number playerY = 0                  // New Player Y coordinate
+    text musicName = ""
+    Cinematic cinematic = undefined
+
+    boolean isFinished = false
+
+    action Run(BehaviorEvent event)
+        // Get the MAIN for level loading
+        Main main = cast(Main, manager:GetGame())
+        output "YO"
+
+        if mapName not= "Not Ready Yet"
+            // Debugging output
+            output "Transition to " + mapName
+
+            // here will be the logic that will control for every map if it can be loaded
+            // this mainly matters for maps where there are no physical collision obstacles from the map transition collider
+            // example: in the introduction, you cannot go to the interior house until touching all of the jewels
+
+    // ================ Ryan: Starting Changes ================
+            main:AddToRemove(main:GetMap():map)
+            main:AddToRemove(main:GetMap():aboveLayer)
+            i = 0
+            repeat main:GetMap():collisions:GetSize() times
+                main:AddToRemove(main:GetMap():collisions:Get(i))
+                i = i + 1
+            end
+            i = 0
+            repeat main:GetMap():interactables:GetSize() times
+                main:AddToRemove(main:GetMap():interactables:Get(i))
+                i = i + 1
+            end
+            i = 0
+            repeat main:GetMap():transitions:GetSize() times
+                main:AddToRemove(main:GetMap():transitions:Get(i))
+                i = i + 1
+            end
+            main:Remove(main:GetPlayer():playerSprite:sprite1)
+            main:Remove(main:GetPlayer():playerSprite:sprite3)
+            main:RemoveCollisionListener(main)
+            Map nextMap
+            main:InitializeMap(nextMap, mapName)
+            main:InitializeInteractables(nextMap, mapName)
+            main:GetPlayer():playerSprite:sprite3:EnablePhysics(true)
+            main:GetPlayer():playerSprite:sprite3:CanRotate(false)
+            main:GetPlayer():playerSprite:sprite3:SetResponsive()
+            main:GetPlayer():playerSprite:sprite3:SetName("player")
+            main:Add(main:GetPlayer():playerSprite:sprite1)
+            main:Add(main:GetPlayer():playerSprite:sprite3)
+            if playerX = 0 and playerY = 0
+                main:GetPlayer():playerSprite:sprite3:SetX(nextMap:map:GetWidth() / 2)
+                main:GetPlayer():playerSprite:sprite3:SetY(nextMap:map:GetHeight() / 2)
+            else
+                main:GetPlayer():playerSprite:sprite3:SetX(playerX)
+                main:GetPlayer():playerSprite:sprite3:SetY(playerY)
+            end
+            main:LoadAboveLayer(nextMap, mapName)
+            main:SetMap(nextMap)
+
+            if mapName:Contains("ForestPath") = false
+                main:StopAllAudio()
+            end
+
+            if not (musicName = "")
+                main:audioManager:AddAudio(musicName, "ogg", "music")
+                main:PlayAudio(musicName)
+            end
+
+            if(cinematic not= undefined)
+                cinematic:Run()
+            end
+
+            isFinished = true
+        else
+            output "This transition is unavailable."
+        end
+
+        if mapName = maps:INTERIOR_HOUSE_MAP
+            main:audioManager:AddAudio("4371-skye-cuillin-by-kevin-macleod", "wav", "music")
+            main:audioManager:PlayAudio("4371-skye-cuillin-by-kevin-macleod")
+        end
+
+        if mapName = maps:FOREST_CLEARING_MAP
+            main:audioManager:AddAudio("zapsplat_nature_forest_ambience_summer_creek_close_by_loud_insects_cicada_australia_27785", "ogg", "music")
+            main:audioManager:PlayAudio("zapsplat_nature_forest_ambience_summer_creek_close_by_loud_insects_cicada_australia_27785")
+        end
+
+        if mapName = maps:PROLOGUE_TOWN_MAP
+            output "playing prologue town cutscene"
+            main:audioManager:AddAudio("3561-crisis-by-kevin-macleod", "ogg", "music")
+            main:audioManager:PlayAudio("3561-crisis-by-kevin-macleod")
+            PrologueTown prologueTown
+            prologueTown:Run()
+        end
+
+        if mapName = maps:RUINED_TOWN_MAP
+            main:audioManager:AddAudio("3440-bittersweet-by-kevin-macleod", "ogg", "music")
+            main:audioManager:PlayAudio("3440-bittersweet-by-kevin-macleod")
+            RuinedTown ruinedTown
+            ruinedTown:Run()
+        end
+
+    end
+    
+    // Initializer of MAPTRANSITIONBEHAVIOR 
+    action SetTransition(Map oldMap, text newName)
+        currentMap = oldMap
+        mapName = newName
+
+        output "<" + newName + "> set for MapTransition"
+    end
+
+    // Sets the PLAYER's new position
+    action SetCoordinates(number newX, number newY)
+        playerX = newX
+        playerY = newY
+    end
+
+    action SetMusic(text newMusicName)
+        musicName = newMusicName
+    end
+
+    action IsFinished() returns boolean
+        return isFinished
+    end
+
+    action SetCinematic(Cinematic scene)
+        cinematic = scene
+    end
+end

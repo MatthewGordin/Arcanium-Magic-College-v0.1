@@ -1,0 +1,75 @@
+use Libraries.Data.Formats.JavaScriptObjectNotation
+use Libraries.System.File
+
+class Spell is Attack
+    
+    integer manaCost = 1                    //mana cost of a spell
+
+    /*Parse through the JSON to find a spell attack with the given ID and use 
+    that information to fill out the spell's fields*/
+    action FillSpell(integer ID)
+        SetID(ID)
+        JavaScriptObjectNotation attackTypes
+        File attacksList
+        attacksList:SetPath("Assets\Attacks\Attacks.json")
+        attackTypes:Read(attacksList)
+        JavaScriptObjectNotation spellData = attackTypes:GetObject("spells")
+
+        JavaScriptObjectNotation currentSpell
+        integer i = 0
+        boolean found = false
+        repeat while (i < spellData:GetSize() and not found)
+            currentSpell = spellData:Get(i)
+            if (currentSpell:GetValue("spellID") = ID:GetText())
+                found = true
+            else
+                i = i + 1
+            end
+        end
+
+        if (not found)
+            output "Temporary Error: spell not found"
+        else
+            SetName(currentSpell:GetValue("name"))
+            SetBaseDamage(currentSpell:GetValue("baseDamage"):ParseInteger())
+            SetMultiTarget(currentSpell:GetValue("multiTarget"):ParseBoolean())
+            SetCanHeal(currentSpell:GetValue("canHeal"):ParseBoolean())
+            SetCanDamage(currentSpell:GetValue("canDamage"):ParseBoolean())
+            SetManaCost(currentSpell:GetValue("manaCost"):ParseInteger())
+
+            spellData = currentSpell:GetObject("appliedStatusCodes")
+            i = 0
+            repeat while (i < spellData:GetSize())
+                Status appliedStatus
+                appliedStatus:FillStatus(spellData:Get(i):GetValue():ParseInteger())
+                appliedStatus:SetBaseDamage(cast(integer, GetBaseDamage()
+                 * appliedStatus:GetBaseModifier()))
+                AddToAppliedStatuses(appliedStatus)
+                i = i + 1
+            end
+
+            spellData = currentSpell:GetObject("curedStatusCodes")
+            i = 0
+            repeat while (i < spellData:GetSize())
+                Status curedStatus
+                curedStatus:FillStatus(spellData:Get(i):GetValue():ParseInteger())
+                curedStatus:SetBaseDamage(cast(integer, GetBaseDamage()
+                 * curedStatus:GetBaseModifier()))
+                AddToCuredStatuses(curedStatus)
+                i = i + 1
+            end
+        end
+    end
+
+/*******************************************************************************
+                    Getters and Setters Below This Point
+*******************************************************************************/
+
+    action SetManaCost(integer newManaCost)
+        manaCost = newManaCost
+    end
+
+    action GetManaCost() returns integer
+        return manaCost
+    end
+end

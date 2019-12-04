@@ -1,0 +1,13 @@
+{
+    "interactables": [
+        {
+            "name": "Fire Interactable",
+            "type": "dialogue",
+            "required": "true",
+            "dialogue": [
+                "The flames in front of you are hot enough to burn your skin even from a distance.",
+                "You use Waterbolt to put out the fire."
+            ]
+        }
+    ]
+}

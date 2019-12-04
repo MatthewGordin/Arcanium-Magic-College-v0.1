@@ -1,0 +1,170 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Game
+use Libraries.Interface.Item2D
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Camera
+
+class CombatUpdateStatusBehavior is Behavior
+    
+    Game game
+    Battle battle
+    Array<Item2D> removalArray
+    Camera camera = undefined
+    BehaviorQueue behaviorQueue
+    Array<Combatant> combatants
+    Label playerMana
+    Array<Label> statusNames
+    Array<Label> statusInfo
+    Array<Drawable> statusWindows
+    Array<Drawable> sprites
+    Array<Drawable> backgrounds
+    Array<CombatMainPageBehavior> playerTurns
+    boolean finished = false
+    boolean checkForVictory = false
+    Player player
+    Array<boolean> flags
+
+    action SetFlags(Array<boolean> newArray)
+        flags = newArray
+    end
+
+    action Run(BehaviorEvent event)
+
+        player = cast(Player, combatants:Get(0))
+        integer counter = 0
+
+        if player not= undefined
+            playerMana:SetText("Mana: " + player:GetCurrentMP() + "/" + player:GetMaxMP())
+        end
+
+        repeat while counter < statusWindows:GetSize()
+            if (combatants:Get(counter) not= undefined) and (not combatants:Get(counter):CheckDefeated())
+                statusInfo:Get(counter):SetText("Health: " + combatants:Get(counter):GetCurrentHP() + "/" + combatants:Get(counter):GetMaxHP())
+            elseif (combatants:Get(counter) not= undefined)
+                if counter = 0
+                    removalArray:Add(playerMana)
+                else
+                    player:AddExperience(combatants:Get(counter):GetExperienceValue(), combatants:Get(counter):GetLevel())
+                    combatants:Set(counter, undefined)
+                end
+
+                removalArray:Add(statusNames:Get(counter))
+                statusNames:Set(counter, undefined)
+
+                removalArray:Add(statusWindows:Get(counter))
+                statusWindows:Set(counter, undefined)
+
+                removalArray:Add(statusInfo:Get(counter))
+                statusInfo:Set(counter, undefined)
+
+                removalArray:Add(sprites:Get(counter))
+                sprites:Set(counter, undefined)
+            end
+
+            counter = counter + 1
+        end
+
+        if checkForVictory
+            CheckCombatOver()
+        end
+
+        finished = true
+    end
+
+    action CheckCombatOver
+        boolean enemiesRemain = false
+
+        integer counter = 1
+        repeat while counter < combatants:GetSize()
+            if combatants:Get(counter) not= undefined
+                enemiesRemain = true
+            end
+
+            counter = counter + 1
+        end
+
+        if combatants:Get(0) = undefined or not enemiesRemain
+            statusInfo:Add(playerMana)
+            backgrounds:Get(0):SetPosition(-1000, -1000)
+
+            CombatEndBattleBehavior endBehavior
+            endBehavior:SetGame(game)
+            endBehavior:SetBattle(battle)
+            endBehavior:SetRemovalArray(removalArray)
+            endBehavior:SetBehaviorQueue(behaviorQueue)
+            endBehavior:SetStatusInfo(statusInfo)
+            endBehavior:SetStatusNames(statusNames)
+            endBehavior:SetStatusWindows(statusWindows)
+            endBehavior:SetSprites(sprites)
+            endBehavior:SetBackgrounds(backgrounds)
+            behaviorQueue:AddBehavior(endBehavior)
+
+            flags:Set(0, true)
+            battle:Dispose()
+            game:SetFocus(player:playerSprite:sprite1)
+        end
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetGame(Game newGame)
+        game = newGame
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+
+    action SetRemovalArray(Array<Item2D> newArray)
+        removalArray = newArray
+    end
+
+    action SetBehaviorQueue(BehaviorQueue newQueue)
+        behaviorQueue = newQueue
+    end
+
+    action SetCamera(Camera newCamera)
+        camera = newCamera
+    end
+
+    action SetCombatants(Array<Combatant> newArray)
+        combatants = newArray
+    end
+
+    action SetPlayerMana(Label newLabel)
+        playerMana = newLabel
+    end
+
+    action SetStatusNames(Array<Label> newArray)
+        statusNames = newArray
+    end
+
+    action SetStatusInfo(Array<Label> newArray)
+        statusInfo = newArray
+    end
+
+    action SetStatusWindows(Array<Drawable> newArray)
+        statusWindows = newArray
+    end
+
+    action SetSprites(Array<Drawable> newArray)
+        sprites = newArray
+    end
+
+    action SetBackgrounds(Array<Drawable> newArray)
+        backgrounds = newArray
+    end
+
+    action SetCheckForVictory(boolean bool)
+        checkForVictory = bool
+    end
+
+    action SetPlayerTurns(Array<CombatMainPageBehavior> newArray)
+        playerTurns = newArray
+    end
+end

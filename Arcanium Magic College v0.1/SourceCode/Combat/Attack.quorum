@@ -1,0 +1,97 @@
+use Libraries.Containers.Array
+
+class Attack
+    
+    text name = ""                          //attack name
+    integer baseDamage = 1                  //base damage used in calculations
+    integer ID = 9000000                    //attack ID, start with 9 for spell, 8 for physical
+    Array<Status> appliedStatuses           //contains status effects applied by the attack
+    Array<Status> curedStatuses             //contains status effects removed by the attack
+    boolean multiTarget = false             //true if it hits multiple (all) enemies, false if it is single-target
+    boolean canHeal = false                 //true if attack can heal target
+    boolean canDamage = false               //true if attack can damage target
+
+/*******************************************************************************
+                    Getters and Setters Below This Point
+*******************************************************************************/
+
+    action SetName(text newName)
+        name = newName
+    end
+
+    action GetName() returns text
+        return name
+    end
+
+    action SetID(integer newID)
+        ID = newID
+    end
+
+    action GetID() returns integer
+        return ID
+    end
+
+    action SetBaseDamage(integer newBaseDamage)
+        baseDamage = newBaseDamage
+    end
+
+    action GetBaseDamage() returns integer
+        return baseDamage
+    end
+
+    action SetMultiTarget(boolean newMultiTarget)
+        multiTarget = newMultiTarget
+    end
+
+    action GetMultiTarget() returns boolean
+        return multiTarget
+    end
+
+    action SetCanHeal(boolean newCanHeal)
+        canHeal = newCanHeal
+    end
+
+    action GetCanHeal() returns boolean
+        return canHeal
+    end
+
+    action SetCanDamage(boolean newCanDamage)
+        canDamage = newCanDamage
+    end
+
+    action GetCanDamage() returns boolean
+        return canDamage
+    end
+    
+    action AddToAppliedStatuses(Status newStatus)
+        appliedStatuses:Add(newStatus)
+    end
+
+    action GetAppliedStatuses() returns Array<Status>
+        return appliedStatuses
+    end
+
+    action SetAppliedStatusesAtPosition(integer position, Status newStatus)
+        appliedStatuses:Set(position, newStatus)
+    end
+
+    action GetAppliedStatusesAtPosition(integer position) returns Status
+        return appliedStatuses:Get(position)
+    end
+
+    action AddToCuredStatuses(Status newStatus)
+        curedStatuses:Add(newStatus)
+    end
+
+    action GetCuredStatuses() returns Array<Status>
+        return curedStatuses
+    end
+
+    action SetCuredStatusesAtPosition(integer position, Status newStatus)
+        curedStatuses:Set(position, newStatus)
+    end
+
+    action GetCuredStatusesAtPosition(integer position) returns Status
+        return curedStatuses:Get(position)
+    end
+end

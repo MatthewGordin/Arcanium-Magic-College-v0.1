@@ -1,0 +1,20 @@
+{
+    "interactables": [
+        {
+            "name": "Interactable Bookshelf",
+            "type": "dialogue",
+            "dialogue": [
+               "This bookshelf contains information about fire spells.",
+               "You see a book titled How to Master the Fire Element (Without Burning Yourself)."
+            ]
+        },
+        {
+            "name": "Interactable Empty Bookshelf",
+            "type": "dialogue",
+            "dialogue": [
+                "Dust has gathered on the shelves, signifying the lack of love this bookshelf has received.",
+                "A spider makes its way across the shelf above your head."
+            ]
+        }
+    ]
+}

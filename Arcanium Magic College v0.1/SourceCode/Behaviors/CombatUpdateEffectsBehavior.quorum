@@ -1,0 +1,41 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+
+class CombatUpdateEffectsBehavior is Behavior
+
+    Array<Combatant> combatants
+    Battle battle
+    boolean finished = false
+
+    action Run(BehaviorEvent event)
+        integer counter = 0
+
+        repeat while counter < combatants:GetSize()
+            if combatants:Get(counter) not= undefined
+                combatants:Get(counter):UpdateStatus()
+            end
+
+            counter = counter + 1
+        end
+
+        finished = true
+    end
+
+    action Dispose
+        battle:UpdateStatus(true)
+        battle:PlayerTurn()
+    end
+
+    action IsFinished returns boolean
+        return finished
+    end
+
+    action SetCombatants(Array<Combatant> newArray)
+        combatants = newArray
+    end
+
+    action SetBattle(Battle newBattle)
+        battle = newBattle
+    end
+end

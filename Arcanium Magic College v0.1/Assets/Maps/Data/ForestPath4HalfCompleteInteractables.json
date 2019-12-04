@@ -1,0 +1,21 @@
+{
+  "interactables": [
+    {
+      "name": "Dead Goblin 1 Interactable",
+      "type": "dialogue",
+      "dialogue": [
+        "The body below you is still.",
+        "It's safe to assume that the goblin has passed."
+      ]
+    },
+    {
+      "name": "Interactable Log Pile 2",
+      "type": "dialogue",
+      "required": "true",
+      "dialogue": [
+        "A pile of logs taller than you block the path ahead.",
+        "You use Air Slash to clear the way."
+      ]
+    }
+  ]
+}

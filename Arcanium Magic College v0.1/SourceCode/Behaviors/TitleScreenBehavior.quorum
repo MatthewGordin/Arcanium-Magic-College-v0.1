@@ -1,0 +1,29 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Drawable
+use Libraries.Containers.Array
+use Libraries.Interface.Controls.Button
+
+class TitleScreenBehavior is Behavior
+    
+    GameStateManager manager
+    boolean finished = false
+
+    action Run (BehaviorEvent event)
+        if(finished = false)
+            Main main = cast(Main, manager:GetGame())
+            MenuButton button = cast(MenuButton, event:GetItem())
+            button:Dispose()
+            main:AddToRemove(button)
+            main:AddToRemove(main:Arcanium)
+            main:AddToRemove(main:TitleBackground)
+            main:BeginGameSequence()
+            finished = true
+        end
+    end
+
+    action IsFinished() returns boolean
+        return finished
+    end
+end

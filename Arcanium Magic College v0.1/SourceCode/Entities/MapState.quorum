@@ -1,0 +1,151 @@
+use Libraries.Containers.Array
+use Libraries.Containers.Iterator
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Game.Graphics.Color
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.GameStateManager
+
+// this class serves as a way to keep track of the map state
+// used to keep track of actions that need to be done before a map is completed 
+
+class MapState
+    GameStateManager manager 
+    Main main = undefined
+    MapList maps
+
+    // cinematic effects
+    CinematicSequencer cineSequencer
+    ColorFadeBehavior fadeFromBlack
+    ColorFadeBehavior fadeToBlack
+    Drawable rectangle1
+    Color color
+
+    // introduction map
+    number jewelsTouched = 0 
+
+    // prologue map
+    boolean firstBattleStarted = false
+
+    // forest path 1 map
+    boolean riverCrossed = false
+
+    // forest path 2 map
+    boolean treeBurned = false
+
+    // forest path 3 map
+    boolean firePutOut = false
+
+    // forest path 4 map
+    boolean logPile1Moved = false
+
+    // forest path 4 half complete map
+    boolean logPile2Moved = false
+
+    boolean gotMain = false
+
+    on create
+        SetupCinematicEffects()
+    end
+
+    action Update(number seconds, text mapName)
+    
+        if gotMain = false
+            main = cast(Main, manager:GetGame())
+            gotMain = true
+        end
+
+        // Check if map conditions have been met for things like cutscenes, map completion conditions, etc.
+        if  mapName = maps:INTRODUCTION_MAP and jewelsTouched = 6
+            output "condition met for introduction!" 
+            jewelsTouched = jewelsTouched + 1
+            
+            Introduction2 introduction2
+            introduction2:Run()
+        end
+
+        if mapName = maps:PROLOGUE_TOWN_MAP and main:GetInCombat() = true
+            firstBattleStarted = true
+        end
+
+        if mapName = maps:PROLOGUE_TOWN_MAP  and firstBattleStarted = true and main:GetInCombat() = false
+            firstBattleStarted = false
+            PrologueTown2 cine
+            cine:Run()
+        end
+
+        // TO-DO: save the hero's position
+        if mapName = maps:FOREST_PATH_1_MAP and riverCrossed = true
+            // rerender with forest path 1 complete map
+            ForestPath1ObstacleComplete cine
+            cine:Run()
+            riverCrossed = false
+        end
+
+        if mapName = maps:FOREST_PATH_2_MAP and treeBurned = true
+            // rerender with forest path 2 complete map
+            ForestPath2ObstacleComplete cine
+            cine:Run()
+            treeBurned = false
+        end
+
+        if mapName = maps:FOREST_PATH_3_MAP and firePutOut = true
+            // rerender with forest path 3 complete map
+            ForestPath3ObstacleComplete cine
+            cine:Run()
+            firePutOut = false
+        end
+
+        if mapName = maps:FOREST_PATH_4_MAP and logPile1Moved = true
+            // rerender with forest path 4 half complete map
+            ForestPath4Obstacle1Complete cine
+            cine:Run()
+            logPile1Moved = false
+        end
+
+        if mapName = maps:FOREST_PATH_4_MAP_HALF_COMPLETE and logPile2Moved = true
+            // rerender with forest path 4 complete map
+            ForestPath4Obstacle2Complete cine
+            cine:Run()
+            logPile2Moved = false
+        end
+    end
+
+    action SetupCinematicEffects
+        fadeFromBlack:SetFade(0,0,0,1, 6)
+        fadeToBlack:SetFade(0,0,0,0.25,4)    
+    end
+
+    action UpdateJewelsTouched
+        jewelsTouched = jewelsTouched + 1
+        output "jewels touched: " + jewelsTouched
+    end
+
+    action SetRiverCrossed(boolean riverCrossed)
+        me:riverCrossed = riverCrossed
+    end
+
+    action SetTreeBurned(boolean treeBurned)
+        me:treeBurned = treeBurned
+    end
+
+    action SetFirePutOut(boolean firePutOut)
+        me:firePutOut = firePutOut
+    end
+
+    action SetLogPile1Moved(boolean logPile1Moved)
+        me:logPile1Moved = logPile1Moved
+    end
+
+    action SetLogPile2Moved(boolean logPile2Moved)
+        me:logPile2Moved = logPile2Moved
+    end
+
+    action SetFirstBattleStarted(boolean firstBattleStarted)
+        me:firstBattleStarted = firstBattleStarted
+    end
+
+    action GetFirstBattleStarted returns boolean
+        return firstBattleStarted
+    end
+end

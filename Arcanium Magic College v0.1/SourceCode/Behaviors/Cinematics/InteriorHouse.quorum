@@ -1,0 +1,128 @@
+use Libraries.Interface.Behaviors.Behavior
+use Libraries.Interface.Events.BehaviorEvent
+use Libraries.Containers.Array
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.ImageSheet
+use Libraries.Game.GameStateManager
+use Libraries.Game.Graphics.Color
+
+class InteriorHouse is Cinematic
+    
+    GameStateManager manager 
+    Main main
+    CinematicSequencer cineSequencer
+
+    //Actors
+    Animation player
+    text playerImgSheet = "Hero"
+    
+    //PostProcessing
+    Drawable rectangle1
+    Color fade1
+
+    //Dialogue
+    Array<text> dialogueText1
+    Array<text> dialogueText2
+//    Array<text> dialogueText3
+
+    //Cinematic Behaviors
+    PanCameraBehavior   cameraPan1
+    ColorFadeBehavior   colorFade1
+    DisplayLogBehavior  dialogue1
+    DisplayLogBehavior  dialogue2
+    DisplayLogBehavior  dialogue3
+    MoveNPCBehavior     moveNPC1
+    MoveNPCBehavior     moveNPC2
+    MoveNPCBehavior     moveNPC3
+    PlaySoundBehavior   sound1
+
+    action Run()
+        ActorSetup()
+        BehaviorSetup()
+        EnqueueBehaviors()
+        
+        cineSequencer:PlayCineSequence()
+    end
+
+    private action ActorSetup()
+        //Required Calls
+        main = cast(Main, manager:GetGame())
+        cineSequencer = main:GetCineSequencer()
+        player = main:GetPlayer():playerSprite
+        player:sprite1:SetCollidable(false)
+
+        //Player NPC
+        player:sprite1:SetPosition(430,335)
+        player:sprite3:SetPosition(430,335)
+
+
+        //Camera
+        main:GetCamera2D():SetZoom(3)
+        main:GetCamera2D():SetPosition(450, 340, 0)
+
+        //Dialogue
+        dialogueText1:Add("You wake up in a familiar place, though you feel... strange. ")
+        dialogueText1:Add("HERO: It told me to 'Come to the Arcanium...'")
+        dialogueText1:Add("You stare at your palms with intent, feeling as if some spark of energy could surface at any moment.")
+        dialogueText1:Add("HERO: What a strange dream.")
+        dialogueText2:Add("Suddenly, a shrill scream can be heard from outside. ")
+        dialogueText2:Add("HERO: What was that?")
+        dialogueText2:Add("HERO: I better go outside to check it out.")
+
+
+
+        //PostProcessing
+        fade1:SetColor(0,0,0,1)
+        rectangle1:LoadFilledRectangle(640,544,fade1)
+        main:Add(rectangle1)
+    end
+
+    private action BehaviorSetup()
+        cameraPan1:     SetCameraZoom(1, 8)
+
+        colorFade1:     SetDrawable(rectangle1)
+        colorFade1:     SetFade(0, 0, 0, 0, 8)
+
+        dialogue1:      SetRemovalArray(main:GetRemovalArray())
+        dialogue1:      SetGame(main)
+        dialogue1:      SetCamera(main:GetCamera2D())
+        dialogue1:      SetLog(dialogueText1)
+
+        dialogue2:      SetRemovalArray(main:GetRemovalArray())
+        dialogue2:      SetGame(main)
+        dialogue2:      SetCamera(main:GetCamera2D())
+        dialogue2:      SetLog(dialogueText2)
+
+//        dialogue3:      SetRemovalArray(main:GetRemovalArray())
+//        dialogue3:      SetGame(main)
+//        dialogue3:      SetCamera(main:GetCamera2D())
+//        dialogue3:      SetLog(dialogueText3)
+
+        moveNPC1:       SetAnimation(player, playerImgSheet)
+        moveNPC1:       SetMoveDirection(110,0, 0.4)
+        moveNPC1:       SetNPCCollidable(false)
+
+        moveNPC2:       SetAnimation(player, playerImgSheet)
+        moveNPC2:       SetMoveDirection(0,-80, 0.4)
+        moveNPC2:       SetNPCCollidable(false)
+
+        moveNPC3:       SetAnimation(player, playerImgSheet)
+        moveNPC3:       SetMoveDirection(0,0, 0)
+        moveNPC3:       SetNPCCollidable(true)
+        sound1:SetSound("Assets\Audio\Effects\AAAGH1.wav")
+        sound1:SetVolume(0.05)
+        
+    end
+
+    private action EnqueueBehaviors()
+        cineSequencer:AddCineEvent(colorFade1, false)
+        cineSequencer:AddCineEvent(cameraPan1, true)
+        cineSequencer:AddCineEvent(dialogue1, true)
+        cineSequencer:AddCineEvent(sound1, false)        
+        cineSequencer:AddCineEvent(moveNPC1, true)
+        cineSequencer:AddCineEvent(moveNPC2, true)
+        cineSequencer:AddCineEvent(moveNPC3, true)
+        cineSequencer:AddCineEvent(dialogue2, true)
+
+    end
+end

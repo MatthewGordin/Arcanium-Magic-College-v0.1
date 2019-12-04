@@ -1,0 +1,20 @@
+{
+    "interactables": [
+        {
+            "name": "Dead Goblin 1 Interactable",
+            "type": "dialogue",
+            "dialogue": [
+               "The body below you is still.",
+               "It's safe to assume that the goblin has passed."
+            ]
+        },
+        {
+            "name": "Dead Goblin 2 Interactable",
+            "type": "dialogue",
+            "dialogue": [
+                "Blood drips down from the dagger in the goblin's right hand.",
+                "It lays lifelessly underneath you."
+            ]
+        }
+    ]
+}
