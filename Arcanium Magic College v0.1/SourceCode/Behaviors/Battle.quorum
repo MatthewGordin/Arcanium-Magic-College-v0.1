@@ -70,11 +70,6 @@ class Battle is Behavior
 
     action Initialize(Player player, Array<text> enemyTeam)
 
-        GameStateManager manager
-        game = manager:GetGame()
-        AccessibilityManager manager2 = manager:GetAccessibilityManager()
-        output manager2:IsScreenReaderListening()
-
         playerTurns:Empty()
         combatants:Empty()
         statusInfo:Empty()
